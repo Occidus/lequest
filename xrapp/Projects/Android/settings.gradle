@@ -1,0 +1,4 @@
+rootProject.projectDir = new File(settingsDir, '../../..')
+rootProject.name = "app"
+
+include ':', 'app:Projects:Android'

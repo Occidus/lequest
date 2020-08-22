@@ -1,0 +1,6 @@
+build/
+!bin/scripts/build
+.gradle
+.cxx
+*.pyc
+*.keystore
