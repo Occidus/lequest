@@ -124,16 +124,16 @@ OpenGL-ES Utility Functions
 ================================================================================
 */
 
-typedef struct {
+struct OpenGLExtensions_t {
     bool multi_view; // GL_OVR_multiview, GL_OVR_multiview2
     bool EXT_texture_border_clamp; // GL_EXT_texture_border_clamp, GL_OES_texture_border_clamp
-} OpenGLExtensions_t;
+};
 
 OpenGLExtensions_t glExtensions;
 
 static void EglInitExtensions() {
     const char* allExtensions = (const char*)glGetString(GL_EXTENSIONS);
-    if (allExtensions != NULL) {
+    if (allExtensions != nullptr) {
         glExtensions.multi_view = strstr(allExtensions, "GL_OVR_multiview2") &&
             strstr(allExtensions, "GL_OVR_multiview_multisampled_render_to_texture");
 
@@ -246,7 +246,7 @@ ovrEgl
 ================================================================================
 */
 
-typedef struct {
+struct ovrEgl {
     EGLint MajorVersion;
     EGLint MinorVersion;
     EGLDisplay Display;
@@ -254,7 +254,7 @@ typedef struct {
     EGLSurface TinySurface;
     EGLSurface MainSurface;
     EGLContext Context;
-} ovrEgl;
+};
 
 static void ovrEgl_Clear(ovrEgl* egl) {
     egl->MajorVersion = 0;
@@ -336,7 +336,7 @@ static void ovrEgl_CreateContext(ovrEgl* egl, const ovrEgl* shareEgl) {
     egl->Context = eglCreateContext(
         egl->Display,
         egl->Config,
-        (shareEgl != NULL) ? shareEgl->Context : EGL_NO_CONTEXT,
+        (shareEgl != nullptr) ? shareEgl->Context : EGL_NO_CONTEXT,
         contextAttribs);
     if (egl->Context == EGL_NO_CONTEXT) {
         ALOGE("        eglCreateContext() failed: %s", EglErrorString(eglGetError()));
@@ -401,25 +401,25 @@ ovrGeometry
 ================================================================================
 */
 
-typedef struct {
+struct ovrVertexAttribPointer {
     GLint Index;
     GLint Size;
     GLenum Type;
     GLboolean Normalized;
     GLsizei Stride;
     const GLvoid* Pointer;
-} ovrVertexAttribPointer;
+};
 
 #define MAX_VERTEX_ATTRIB_POINTERS 3
 
-typedef struct {
+struct ovrGeometry {
     GLuint VertexBuffer;
     GLuint IndexBuffer;
     GLuint VertexArrayObject;
     int VertexCount;
     int IndexCount;
     ovrVertexAttribPointer VertexAttribs[MAX_VERTEX_ATTRIB_POINTERS];
-} ovrGeometry;
+};
 
 enum VertexAttributeLocation {
     VERTEX_ATTRIBUTE_LOCATION_POSITION,
@@ -428,10 +428,10 @@ enum VertexAttributeLocation {
     VERTEX_ATTRIBUTE_LOCATION_TRANSFORM
 };
 
-typedef struct {
+struct ovrVertexAttribute {
     enum VertexAttributeLocation location;
     const char* name;
-} ovrVertexAttribute;
+};
 
 static ovrVertexAttribute ProgramVertexAttributes[] = {
     {VERTEX_ATTRIBUTE_LOCATION_POSITION, "vertexPosition"},
@@ -452,10 +452,10 @@ static void ovrGeometry_Clear(ovrGeometry* geometry) {
 }
 
 static void ovrGeometry_CreateCube(ovrGeometry* geometry) {
-    typedef struct {
-        char positions[8][4];
+    struct ovrCubeVertices {
+        signed char positions[8][4];
         unsigned char colors[8][4];
-    } ovrCubeVertices;
+    };
 
     static const ovrCubeVertices cubeVertices = {
         // positions
@@ -563,7 +563,7 @@ ovrProgram
 #define MAX_PROGRAM_UNIFORMS 8
 #define MAX_PROGRAM_TEXTURES 8
 
-typedef struct {
+struct ovrProgram {
     GLuint Program;
     GLuint VertexShader;
     GLuint FragmentShader;
@@ -571,27 +571,27 @@ typedef struct {
     GLint UniformLocation[MAX_PROGRAM_UNIFORMS]; // ProgramUniforms[].name
     GLint UniformBinding[MAX_PROGRAM_UNIFORMS]; // ProgramUniforms[].name
     GLint Textures[MAX_PROGRAM_TEXTURES]; // Texture%i
-} ovrProgram;
+};
 
-typedef struct {
-    enum {
-        UNIFORM_MODEL_MATRIX,
-        UNIFORM_VIEW_ID,
-        UNIFORM_SCENE_MATRICES,
+struct ovrUniform {
+    enum Index {
+        MODEL,
+        VIEW_ID,
+        SCENE_MATRICES,
     } index;
-    enum {
-        UNIFORM_TYPE_VECTOR4,
-        UNIFORM_TYPE_MATRIX4X4,
-        UNIFORM_TYPE_INT,
-        UNIFORM_TYPE_BUFFER,
+    enum Type {
+        VECTOR4,
+        MATRIX4X4,
+        INT,
+        BUFFER,
     } type;
     const char* name;
-} ovrUniform;
+};
 
 static ovrUniform ProgramUniforms[] = {
-    {UNIFORM_MODEL_MATRIX, UNIFORM_TYPE_MATRIX4X4, "ModelMatrix"},
-    {UNIFORM_VIEW_ID, UNIFORM_TYPE_INT, "ViewID"},
-    {UNIFORM_SCENE_MATRICES, UNIFORM_TYPE_BUFFER, "SceneMatrices"},
+    {ovrUniform::Index::MODEL, ovrUniform::Type::MATRIX4X4, "ModelMatrix"},
+    {ovrUniform::Index::VIEW_ID, ovrUniform::Type::INT, "ViewID"},
+    {ovrUniform::Index::SCENE_MATRICES, ovrUniform::Type::BUFFER, "SceneMatrices"},
 };
 
 static void ovrProgram_Clear(ovrProgram* program) {
@@ -667,7 +667,7 @@ static bool ovrProgram_Create(
     memset(program->UniformLocation, -1, sizeof(program->UniformLocation));
     for (int i = 0; i < sizeof(ProgramUniforms) / sizeof(ProgramUniforms[0]); i++) {
         const int uniformIndex = ProgramUniforms[i].index;
-        if (ProgramUniforms[i].type == UNIFORM_TYPE_BUFFER) {
+        if (ProgramUniforms[i].type == ovrUniform::Type::BUFFER) {
             GL(program->UniformLocation[uniformIndex] =
                    glGetUniformBlockIndex(program->Program, ProgramUniforms[i].name));
             program->UniformBinding[uniformIndex] = numBufferBindings++;
@@ -758,7 +758,7 @@ ovrFramebuffer
 ================================================================================
 */
 
-typedef struct {
+struct ovrFramebuffer {
     int Width;
     int Height;
     int Multisamples;
@@ -768,7 +768,7 @@ typedef struct {
     ovrTextureSwapChain* ColorTextureSwapChain;
     GLuint* DepthBuffers;
     GLuint* FrameBuffers;
-} ovrFramebuffer;
+};
 
 static void ovrFramebuffer_Clear(ovrFramebuffer* frameBuffer) {
     frameBuffer->Width = 0;
@@ -777,9 +777,9 @@ static void ovrFramebuffer_Clear(ovrFramebuffer* frameBuffer) {
     frameBuffer->TextureSwapChainLength = 0;
     frameBuffer->TextureSwapChainIndex = 0;
     frameBuffer->UseMultiview = false;
-    frameBuffer->ColorTextureSwapChain = NULL;
-    frameBuffer->DepthBuffers = NULL;
-    frameBuffer->FrameBuffers = NULL;
+    frameBuffer->ColorTextureSwapChain = nullptr;
+    frameBuffer->DepthBuffers = nullptr;
+    frameBuffer->FrameBuffers = nullptr;
 }
 
 static bool ovrFramebuffer_Create(
@@ -807,7 +807,7 @@ static bool ovrFramebuffer_Create(
     frameBuffer->Height = height;
     frameBuffer->Multisamples = multisamples;
     frameBuffer->UseMultiview =
-        (useMultiview && (glFramebufferTextureMultiviewOVR != NULL)) ? true : false;
+        (useMultiview && (glFramebufferTextureMultiviewOVR != nullptr)) ? true : false;
 
     frameBuffer->ColorTextureSwapChain = vrapi_CreateTextureSwapChain3(
         frameBuffer->UseMultiview ? VRAPI_TEXTURE_TYPE_2D_ARRAY : VRAPI_TEXTURE_TYPE_2D,
@@ -849,7 +849,7 @@ static bool ovrFramebuffer_Create(
             // Create the frame buffer.
             GL(glGenFramebuffers(1, &frameBuffer->FrameBuffers[i]));
             GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer->FrameBuffers[i]));
-            if (multisamples > 1 && (glFramebufferTextureMultisampleMultiviewOVR != NULL)) {
+            if (multisamples > 1 && (glFramebufferTextureMultisampleMultiviewOVR != nullptr)) {
                 GL(glFramebufferTextureMultisampleMultiviewOVR(
                     GL_DRAW_FRAMEBUFFER,
                     GL_DEPTH_ATTACHMENT,
@@ -892,8 +892,8 @@ static bool ovrFramebuffer_Create(
                 return false;
             }
         } else {
-            if (multisamples > 1 && glRenderbufferStorageMultisampleEXT != NULL &&
-                glFramebufferTexture2DMultisampleEXT != NULL) {
+            if (multisamples > 1 && glRenderbufferStorageMultisampleEXT != nullptr &&
+                glFramebufferTexture2DMultisampleEXT != nullptr) {
                 // Create multisampled depth buffer.
                 GL(glGenRenderbuffers(1, &frameBuffer->DepthBuffers[i]));
                 GL(glBindRenderbuffer(GL_RENDERBUFFER, frameBuffer->DepthBuffers[i]));
@@ -1006,7 +1006,7 @@ ovrScene
 #define NUM_INSTANCES 1500
 #define NUM_ROTATIONS 16
 
-typedef struct {
+struct ovrScene{
     bool CreatedScene;
     bool CreatedVAOs;
     unsigned int Random;
@@ -1017,7 +1017,7 @@ typedef struct {
     ovrVector3f Rotations[NUM_ROTATIONS];
     ovrVector3f CubePositions[NUM_INSTANCES];
     int CubeRotations[NUM_INSTANCES];
-} ovrScene;
+};
 
 static void ovrScene_Clear(ovrScene* scene) {
     scene->CreatedScene = false;
@@ -1080,7 +1080,7 @@ static void ovrScene_Create(ovrScene* scene, bool useMultiview) {
     // Create the instance transform attribute buffer.
     GL(glGenBuffers(1, &scene->InstanceTransformBuffer));
     GL(glBindBuffer(GL_ARRAY_BUFFER, scene->InstanceTransformBuffer));
-    GL(glBufferData(GL_ARRAY_BUFFER, NUM_INSTANCES * 4 * 4 * sizeof(float), NULL, GL_DYNAMIC_DRAW));
+    GL(glBufferData(GL_ARRAY_BUFFER, NUM_INSTANCES * 4 * 4 * sizeof(float), nullptr, GL_DYNAMIC_DRAW));
     GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     // Setup the scene matrices.
@@ -1090,7 +1090,7 @@ static void ovrScene_Create(ovrScene* scene, bool useMultiview) {
         GL_UNIFORM_BUFFER,
         2 * sizeof(ovrMatrix4f) /* 2 view matrices */ +
             2 * sizeof(ovrMatrix4f) /* 2 projection matrices */,
-        NULL,
+        nullptr,
         GL_STATIC_DRAW));
     GL(glBindBuffer(GL_UNIFORM_BUFFER, 0));
 
@@ -1182,9 +1182,9 @@ ovrSimulation
 ================================================================================
 */
 
-typedef struct {
+struct ovrSimulation {
     ovrVector3f CurrentRotation;
-} ovrSimulation;
+};
 
 static void ovrSimulation_Clear(ovrSimulation* simulation) {
     simulation->CurrentRotation.x = 0.0f;
@@ -1207,10 +1207,10 @@ ovrRenderer
 ================================================================================
 */
 
-typedef struct {
+struct ovrRenderer {
     ovrFramebuffer FrameBuffer[VRAPI_FRAME_LAYER_EYE_MAX];
     int NumBuffers;
-} ovrRenderer;
+};
 
 static void ovrRenderer_Clear(ovrRenderer* renderer) {
     for (int eye = 0; eye < VRAPI_FRAME_LAYER_EYE_MAX; eye++) {
@@ -1309,7 +1309,7 @@ static ovrLayerProjection2 ovrRenderer_RenderFrame(
                2 * sizeof(ovrMatrix4f) /* 2 projection matrices */,
            GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT));
 
-    if (sceneMatrices != NULL) {
+    if (sceneMatrices != nullptr) {
         memcpy((char*)sceneMatrices, &eyeViewMatrixTransposed, 2 * sizeof(ovrMatrix4f));
         memcpy(
             (char*)sceneMatrices + 2 * sizeof(ovrMatrix4f),
@@ -1341,12 +1341,12 @@ static ovrLayerProjection2 ovrRenderer_RenderFrame(
         GL(glUseProgram(scene->Program.Program));
         GL(glBindBufferBase(
             GL_UNIFORM_BUFFER,
-            scene->Program.UniformBinding[UNIFORM_SCENE_MATRICES],
+            scene->Program.UniformBinding[ovrUniform::Index::SCENE_MATRICES],
             scene->SceneMatrices));
-        if (scene->Program.UniformLocation[UNIFORM_VIEW_ID] >=
+        if (scene->Program.UniformLocation[ovrUniform::Index::VIEW_ID] >=
             0) // NOTE: will not be present when multiview path is enabled.
         {
-            GL(glUniform1i(scene->Program.UniformLocation[UNIFORM_VIEW_ID], eye));
+            GL(glUniform1i(scene->Program.UniformLocation[ovrUniform::Index::VIEW_ID], eye));
         }
         GL(glEnable(GL_SCISSOR_TEST));
         GL(glDepthMask(GL_TRUE));
@@ -1360,7 +1360,7 @@ static ovrLayerProjection2 ovrRenderer_RenderFrame(
         GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
         GL(glBindVertexArray(scene->Cube.VertexArrayObject));
         GL(glDrawElementsInstanced(
-            GL_TRIANGLES, scene->Cube.IndexCount, GL_UNSIGNED_SHORT, NULL, NUM_INSTANCES));
+            GL_TRIANGLES, scene->Cube.IndexCount, GL_UNSIGNED_SHORT, nullptr, NUM_INSTANCES));
         GL(glBindVertexArray(0));
         GL(glUseProgram(0));
 
@@ -1385,7 +1385,7 @@ ovrRenderThread
 
 typedef enum { RENDER_FRAME, RENDER_LOADING_ICON, RENDER_BLACK_FINAL } ovrRenderType;
 
-typedef struct {
+struct ovrRenderThread{
     JavaVM* JavaVm;
     jobject ActivityObject;
     const ovrEgl* ShareEgl;
@@ -1408,7 +1408,7 @@ typedef struct {
     ovrScene* Scene;
     ovrSimulation Simulation;
     ovrTracking2 Tracking;
-} ovrRenderThread;
+};
 
 void* RenderThreadFunction(void* parm) {
     ovrRenderThread* renderThread = (ovrRenderThread*)parm;
@@ -1416,7 +1416,7 @@ void* RenderThreadFunction(void* parm) {
 
     ovrJava java;
     java.Vm = renderThread->JavaVm;
-    (*java.Vm)->AttachCurrentThread(java.Vm, &java.Env, NULL);
+    java.Vm->AttachCurrentThread(&java.Env, nullptr);
     java.ActivityObject = renderThread->ActivityObject;
 
     // Note that AttachCurrentThread will reset the thread name.
@@ -1428,7 +1428,7 @@ void* RenderThreadFunction(void* parm) {
     ovrRenderer renderer;
     ovrRenderer_Create(&renderer, &java, renderThread->UseMultiview);
 
-    ovrScene* lastScene = NULL;
+    ovrScene* lastScene = nullptr;
 
     for (;;) {
         // Signal work completed.
@@ -1451,8 +1451,8 @@ void* RenderThreadFunction(void* parm) {
         }
 
         // Make sure the scene has VAOs created for this context.
-        if (renderThread->Scene != NULL && renderThread->Scene != lastScene) {
-            if (lastScene != NULL) {
+        if (renderThread->Scene != nullptr && renderThread->Scene != lastScene) {
+            if (lastScene != nullptr) {
                 ovrScene_DestroyVAOs(lastScene);
             }
             ovrScene_CreateVAOs(renderThread->Scene);
@@ -1509,7 +1509,7 @@ void* RenderThreadFunction(void* parm) {
         vrapi_SubmitFrame2(renderThread->Ovr, &frameDesc);
     }
 
-    if (lastScene != NULL) {
+    if (lastScene != nullptr) {
         ovrScene_DestroyVAOs(lastScene);
     }
 
@@ -1518,25 +1518,25 @@ void* RenderThreadFunction(void* parm) {
 
     (*java.Vm)->DetachCurrentThread(java.Vm);
 
-    return NULL;
+    return nullptr;
 }
 
 static void ovrRenderThread_Clear(ovrRenderThread* renderThread) {
-    renderThread->JavaVm = NULL;
-    renderThread->ActivityObject = NULL;
-    renderThread->ShareEgl = NULL;
+    renderThread->JavaVm = nullptr;
+    renderThread->ActivityObject = nullptr;
+    renderThread->ShareEgl = nullptr;
     renderThread->Thread = 0;
     renderThread->Tid = 0;
     renderThread->UseMultiview = false;
     renderThread->Exit = false;
     renderThread->WorkAvailableFlag = false;
     renderThread->WorkDoneFlag = false;
-    renderThread->Ovr = NULL;
+    renderThread->Ovr = nullptr;
     renderThread->RenderType = RENDER_FRAME;
     renderThread->FrameIndex = 1;
     renderThread->DisplayTime = 0;
     renderThread->SwapInterval = 1;
-    renderThread->Scene = NULL;
+    renderThread->Scene = nullptr;
     ovrSimulation_Clear(&renderThread->Simulation);
 }
 
@@ -1554,12 +1554,12 @@ static void ovrRenderThread_Create(
     renderThread->Exit = false;
     renderThread->WorkAvailableFlag = false;
     renderThread->WorkDoneFlag = false;
-    pthread_cond_init(&renderThread->WorkAvailableCondition, NULL);
-    pthread_cond_init(&renderThread->WorkDoneCondition, NULL);
-    pthread_mutex_init(&renderThread->Mutex, NULL);
+    pthread_cond_init(&renderThread->WorkAvailableCondition, nullptr);
+    pthread_cond_init(&renderThread->WorkDoneCondition, nullptr);
+    pthread_mutex_init(&renderThread->Mutex, nullptr);
 
     const int createErr =
-        pthread_create(&renderThread->Thread, NULL, RenderThreadFunction, renderThread);
+        pthread_create(&renderThread->Thread, nullptr, RenderThreadFunction, renderThread);
     if (createErr != 0) {
         ALOGE("pthread_create returned %i", createErr);
     }
@@ -1572,7 +1572,7 @@ static void ovrRenderThread_Destroy(ovrRenderThread* renderThread) {
     pthread_cond_signal(&renderThread->WorkAvailableCondition);
     pthread_mutex_unlock(&renderThread->Mutex);
 
-    pthread_join(renderThread->Thread, NULL);
+    pthread_join(renderThread->Thread, nullptr);
     pthread_cond_destroy(&renderThread->WorkAvailableCondition);
     pthread_cond_destroy(&renderThread->WorkDoneCondition);
     pthread_mutex_destroy(&renderThread->Mutex);
@@ -1601,10 +1601,10 @@ static void ovrRenderThread_Submit(
     renderThread->DisplayTime = displayTime;
     renderThread->SwapInterval = swapInterval;
     renderThread->Scene = scene;
-    if (simulation != NULL) {
+    if (simulation != nullptr) {
         renderThread->Simulation = *simulation;
     }
-    if (tracking != NULL) {
+    if (tracking != nullptr) {
         renderThread->Tracking = *tracking;
     }
     // Signal work is available.
@@ -1637,7 +1637,7 @@ ovrApp
 ================================================================================
 */
 
-typedef struct {
+struct ovrApp {
     ovrJava Java;
     ovrEgl Egl;
     ANativeWindow* NativeWindow;
@@ -1659,15 +1659,15 @@ typedef struct {
     ovrRenderer Renderer;
 #endif
     bool UseMultiview;
-} ovrApp;
+};
 
 static void ovrApp_Clear(ovrApp* app) {
-    app->Java.Vm = NULL;
-    app->Java.Env = NULL;
-    app->Java.ActivityObject = NULL;
-    app->NativeWindow = NULL;
+    app->Java.Vm = nullptr;
+    app->Java.Env = nullptr;
+    app->Java.ActivityObject = nullptr;
+    app->NativeWindow = nullptr;
     app->Resumed = false;
-    app->Ovr = NULL;
+    app->Ovr = nullptr;
     app->FrameIndex = 1;
     app->DisplayTime = 0;
     app->SwapInterval = 1;
@@ -1689,8 +1689,8 @@ static void ovrApp_Clear(ovrApp* app) {
 }
 
 static void ovrApp_HandleVrModeChanges(ovrApp* app) {
-    if (app->Resumed != false && app->NativeWindow != NULL) {
-        if (app->Ovr == NULL) {
+    if (app->Resumed != false && app->NativeWindow != nullptr) {
+        if (app->Ovr == nullptr) {
             ovrModeParms parms = vrapi_DefaultModeParms(&app->Java);
             // No need to reset the FLAG_FULLSCREEN window flag when using a View
             parms.Flags &= ~VRAPI_MODE_FLAG_RESET_WINDOW_FULLSCREEN;
@@ -1709,13 +1709,13 @@ static void ovrApp_HandleVrModeChanges(ovrApp* app) {
             ALOGV("        eglGetCurrentSurface( EGL_DRAW ) = %p", eglGetCurrentSurface(EGL_DRAW));
 
             // If entering VR mode failed then the ANativeWindow was not valid.
-            if (app->Ovr == NULL) {
+            if (app->Ovr == nullptr) {
                 ALOGE("Invalid ANativeWindow!");
-                app->NativeWindow = NULL;
+                app->NativeWindow = nullptr;
             }
 
             // Set performance parameters once we have entered VR mode and have a valid ovrMobile.
-            if (app->Ovr != NULL) {
+            if (app->Ovr != nullptr) {
                 vrapi_SetClockLevels(app->Ovr, app->CpuLevel, app->GpuLevel);
 
                 ALOGV("		vrapi_SetClockLevels( %d, %d )", app->CpuLevel, app->GpuLevel);
@@ -1731,7 +1731,7 @@ static void ovrApp_HandleVrModeChanges(ovrApp* app) {
             }
         }
     } else {
-        if (app->Ovr != NULL) {
+        if (app->Ovr != nullptr) {
 #if MULTI_THREADED
             // Make sure the renderer thread is no longer using the ovrMobile.
             ovrRenderThread_Wait(&app->RenderThread);
@@ -1741,7 +1741,7 @@ static void ovrApp_HandleVrModeChanges(ovrApp* app) {
             ALOGV("        vrapi_LeaveVrMode()");
 
             vrapi_LeaveVrMode(app->Ovr);
-            app->Ovr = NULL;
+            app->Ovr = nullptr;
 
             ALOGV("        eglGetCurrentSurface( EGL_DRAW ) = %p", eglGetCurrentSurface(EGL_DRAW));
         }
@@ -1864,7 +1864,7 @@ static void app_handle_cmd(struct android_app* app, int32_t cmd) {
         case APP_CMD_DESTROY: {
             ALOGV("onDestroy()");
             ALOGV("    APP_CMD_DESTROY");
-            appState->NativeWindow = NULL;
+            appState->NativeWindow = nullptr;
             break;
         }
         case APP_CMD_INIT_WINDOW: {
@@ -1876,7 +1876,7 @@ static void app_handle_cmd(struct android_app* app, int32_t cmd) {
         case APP_CMD_TERM_WINDOW: {
             ALOGV("surfaceDestroyed()");
             ALOGV("    APP_CMD_TERM_WINDOW");
-            appState->NativeWindow = NULL;
+            appState->NativeWindow = nullptr;
             break;
         }
     }
@@ -1896,7 +1896,7 @@ void android_main(struct android_app* app) {
 
     ovrJava java;
     java.Vm = app->activity->vm;
-    (*java.Vm)->AttachCurrentThread(java.Vm, &java.Env, NULL);
+    java.Vm->AttachCurrentThread(&java.Env, nullptr);
     java.ActivityObject = app->activity->clazz;
 
     // Note that AttachCurrentThread will reset the thread name.
@@ -1913,7 +1913,7 @@ void android_main(struct android_app* app) {
     ovrApp_Clear(&appState);
     appState.Java = java;
 
-    ovrEgl_CreateContext(&appState.Egl, NULL);
+    ovrEgl_CreateContext(&appState.Egl, nullptr);
 
     EglInitExtensions();
 
@@ -1945,13 +1945,13 @@ void android_main(struct android_app* app) {
             int events;
             struct android_poll_source* source;
             const int timeoutMilliseconds =
-                (appState.Ovr == NULL && app->destroyRequested == 0) ? -1 : 0;
-            if (ALooper_pollAll(timeoutMilliseconds, NULL, &events, (void**)&source) < 0) {
+                (appState.Ovr == nullptr && app->destroyRequested == 0) ? -1 : 0;
+            if (ALooper_pollAll(timeoutMilliseconds, nullptr, &events, (void**)&source) < 0) {
                 break;
             }
 
             // Process this event.
-            if (source != NULL) {
+            if (source != nullptr) {
                 source->process(app, source);
             }
 
@@ -1963,7 +1963,7 @@ void android_main(struct android_app* app) {
 
         ovrApp_HandleInput(&appState);
 
-        if (appState.Ovr == NULL) {
+        if (appState.Ovr == nullptr) {
             continue;
         }
 
@@ -1979,9 +1979,9 @@ void android_main(struct android_app* app) {
                 appState.FrameIndex,
                 appState.DisplayTime,
                 appState.SwapInterval,
-                NULL,
-                NULL,
-                NULL);
+                nullptr,
+                nullptr,
+                nullptr);
 #else
             // Show a loading icon.
             int frameFlags = 0;
@@ -2080,5 +2080,5 @@ void android_main(struct android_app* app) {
 
     vrapi_Shutdown();
 
-    (*java.Vm)->DetachCurrentThread(java.Vm);
+    java.Vm->DetachCurrentThread();
 }

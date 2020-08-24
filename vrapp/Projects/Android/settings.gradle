@@ -1,4 +1,4 @@
 rootProject.projectDir = new File(settingsDir, '../../..')
-rootProject.name = "app"
+rootProject.name = "vrapp"
 
-include ':', 'app:Projects:Android'
+include ':', 'vrapp:Projects:Android'

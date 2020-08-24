@@ -1,4 +1,4 @@
 rootProject.projectDir = new File(settingsDir, '../../..')
-rootProject.name = "app"
+rootProject.name = "xrapp"
 
-include ':', 'app:Projects:Android'
+include ':', 'xrapp:Projects:Android'
