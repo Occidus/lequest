@@ -452,7 +452,7 @@ static void ovrGeometry_Clear(ovrGeometry* geometry) {
 }
 
 static void ovrGeometry_CreateCube(ovrGeometry* geometry) {
-    /*struct ovrCubeVertices {
+    struct ovrCubeVertices {
         signed char positions[8][4];
         unsigned char colors[8][4];
     };
@@ -470,13 +470,13 @@ static void ovrGeometry_CreateCube(ovrGeometry* geometry) {
             {+127, -127, -127, +127} // bottom
         },
         // colors
-        {{255, 0, 255, 255},
-         {0, 255, 0, 255},
-         {0, 0, 255, 255},
+        {{255, 0, 0, 255},
          {255, 0, 0, 255},
-         {0, 0, 255, 255},
-         {0, 255, 0, 255},
-         {255, 0, 255, 255},
+         {255, 0, 0, 255},
+         {255, 0, 0, 255},
+         {255, 0, 0, 255},
+         {255, 0, 0, 255},
+         {255, 0, 0, 255},
          {255, 0, 0, 255}},
     };
 
@@ -514,7 +514,7 @@ static void ovrGeometry_CreateCube(ovrGeometry* geometry) {
     GL(glGenBuffers(1, &geometry->IndexBuffer));
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, geometry->IndexBuffer));
     GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW));
-    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
+    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
 
 static void ovrGeometry_Destroy(ovrGeometry* geometry) {
@@ -1075,7 +1075,7 @@ static float ovrScene_RandomFloat(ovrScene* scene) {
 
 static void ovrScene_Create(ovrScene* scene, bool useMultiview) {
     ovrProgram_Create(&scene->Program, VERTEX_SHADER, FRAGMENT_SHADER, useMultiview);
-    //ovrGeometry_CreateCube(&scene->Cube);
+    ovrGeometry_CreateCube(&scene->Cube);
 
     // Create the instance transform attribute buffer.
     GL(glGenBuffers(1, &scene->InstanceTransformBuffer));
@@ -1094,7 +1094,7 @@ static void ovrScene_Create(ovrScene* scene, bool useMultiview) {
         GL_STATIC_DRAW));
     GL(glBindBuffer(GL_UNIFORM_BUFFER, 0));
 
-    /*// Setup random rotations.
+    // Setup random rotations.
     for (int i = 0; i < NUM_ROTATIONS; i++) {
         scene->Rotations[i].x = ovrScene_RandomFloat(scene);
         scene->Rotations[i].y = ovrScene_RandomFloat(scene);
@@ -1153,7 +1153,7 @@ static void ovrScene_Create(ovrScene* scene, bool useMultiview) {
         scene->CubePositions[insert].z = rz;
 
         scene->CubeRotations[insert] = (int)(ovrScene_RandomFloat(scene) * (NUM_ROTATIONS - 0.1f));
-    }*/
+    }
 
     scene->CreatedScene = true;
 
