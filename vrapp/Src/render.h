@@ -3,16 +3,11 @@
 #include "linear.h"
 
 struct Renderer {
-
   r3::Matrix4f camFrustum;
   r3::Matrix4f camPose;
-
-  //float fovy = 60.0f;
   r3::Vec3f intLoc;
   r3::Vec2d prevPos;
   r3::Vec2d diffPos;
-  //float rad = 2.5;
-  //float camHeight = 0.0;
   float theta = 0.0;
   bool intersect = false;
   int iterate = 0;

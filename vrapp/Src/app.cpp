@@ -1198,9 +1198,11 @@ static ovrLayerProjection2 ovrRenderer_RenderFrame(
 
         ovrFramebuffer_Resolve(frameBuffer);
         ovrFramebuffer_Advance(frameBuffer);
-        renderer->rend->camFrustum = ToR3(projectionMatrixTransposed[eye]);//.Transpose();
-        renderer->rend->camPose    = ToR3(eyeViewMatrixTransposed[eye]);//.Transpose();
-        renderer->rend->Draw();
+        if (eye == 1){
+            renderer->rend->camFrustum = ToR3(projectionMatrixTransposed[eye]).Transpose();
+            renderer->rend->camPose    = ToR3(eyeViewMatrixTransposed[eye]).Transpose();
+            renderer->rend->Draw();
+        }
     }
 
     ovrFramebuffer_SetNone();
