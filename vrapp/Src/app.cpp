@@ -28,7 +28,7 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
 
-#include "square.h"
+#include "render.h"
 
 #if !defined(EGL_OPENGL_ES3_BIT_KHR)
 #define EGL_OPENGL_ES3_BIT_KHR 0x0040
