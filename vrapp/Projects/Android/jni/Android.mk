@@ -9,6 +9,8 @@ include $(CLEAR_VARS)
 LOCAL_MODULE			:= vrapp
 LOCAL_CFLAGS			:= -std=c++11 -Werror
 LOCAL_SRC_FILES			:= ../../../Src/app.cpp
+LOCAL_SRC_FILES			+= ../../../Src/geom.cpp
+LOCAL_SRC_FILES			+= ../../../Src/square.cpp
 LOCAL_LDLIBS			:= -llog -landroid -lGLESv3 -lEGL		# include default libraries
 
 LOCAL_LDFLAGS			:= -u ANativeActivity_onCreate
