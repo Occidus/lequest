@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "learningvr.h"
-//#include "scene.h"
+#include "scene.h"
 
 enum ShaderType {
   StScalar,
@@ -64,7 +64,7 @@ class Prog {
   void create(const char* vertexShaderFilename, const char* fragmentShaderFilename);
   void create(const char* baseShaderName);
 
-  //void load(const Scene& scene);
+  void load(const Scene& scene);
 
   Ui loc(const std::string& var) const;
 };

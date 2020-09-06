@@ -9,6 +9,8 @@
 #define GLSL_VERSION "#version 320 es\n"
 #endif
 
+#define PATH_PREFIX "/data/data/us.xyzw.vrapp/"
+
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES3/gl3.h>

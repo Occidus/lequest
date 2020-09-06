@@ -15,6 +15,7 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/prctl.h> // for prctl( PR_SET_NAME )
@@ -29,6 +30,7 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include <GLES3/gl3ext.h>
 
 #include "render.h"
+#include "learningvr.h"
 
 #if !defined(EGL_OPENGL_ES3_BIT_KHR)
 #define EGL_OPENGL_ES3_BIT_KHR 0x0040
@@ -1031,6 +1033,7 @@ ovrRenderer
 
 struct ovrRenderer {
     ovrFramebuffer FrameBuffer[VRAPI_FRAME_LAYER_EYE_MAX];
+    Renderer* rend = nullptr;
     int NumBuffers;
 };
 
@@ -1044,6 +1047,8 @@ static void ovrRenderer_Clear(ovrRenderer* renderer) {
 static void
 ovrRenderer_Create(ovrRenderer* renderer, const ovrJava* java) {
     renderer->NumBuffers = VRAPI_FRAME_LAYER_EYE_MAX;
+    renderer->rend = CreateRenderer();
+    renderer->rend->Init();
 
     // Create the frame buffers.
     for (int eye = 0; eye < renderer->NumBuffers; eye++) {
@@ -1186,6 +1191,10 @@ static ovrLayerProjection2 ovrRenderer_RenderFrame(
 
         ovrFramebuffer_Resolve(frameBuffer);
         ovrFramebuffer_Advance(frameBuffer);
+        if (eye==0){
+            GL(glClearColor(0.125f, 0.0f, 0.125f, 1.0f));
+            renderer->rend->Draw();
+        }
     }
 
     ovrFramebuffer_SetNone();
@@ -1433,11 +1442,35 @@ static void app_handle_cmd(struct android_app* app, int32_t cmd) {
     }
 }
 
+void copy_assets(AAssetManager* mgr) {
+    AAssetDir* assetDir = AAssetManager_openDir(mgr, "");
+    const char* filename = (const char*)NULL;
+    static const int SZ = 1 << 20;
+    char* buf = new char[SZ];
+    while ((filename = AAssetDir_getNextFileName(assetDir)) != NULL) {
+        AAsset* asset = AAssetManager_open(mgr, filename, AASSET_MODE_STREAMING);
+        int nb_read = 0;
+        char fullPath[512];
+        strcpy(fullPath, PATH_PREFIX);
+        strcat(fullPath, filename);
+        FILE* out = fopen(fullPath, "w");
+        ALOGV("writing file: %s", fullPath);
+        while ((nb_read = AAsset_read(asset, buf, SZ)) > 0) {
+            fwrite(buf, nb_read, 1, out);
+        }
+        fclose(out);
+        AAsset_close(asset);
+    }
+    delete[] buf;
+    AAssetDir_close(assetDir);
+}
+
 /**
  * This is the main entry point of a native application that is using
  * android_native_app_glue.  It runs in its own thread, with its own
  * event loop for receiving input events and doing other things.
  */
+
 void android_main(struct android_app* app) {
     ALOGV("----------------------------------------------------------------");
     ALOGV("android_app_entry()");
@@ -1452,6 +1485,8 @@ void android_main(struct android_app* app) {
 
     // Note that AttachCurrentThread will reset the thread name.
     prctl(PR_SET_NAME, (long)"OVR::Main", 0, 0, 0);
+
+    copy_assets(app->activity->assetManager);
 
     const ovrInitParms initParms = vrapi_DefaultInitParms(&java);
     int32_t initResult = vrapi_Initialize(&initParms);

@@ -81,7 +81,7 @@ Renderer* CreateRenderer() {
 static GLuint load_image(const char* imgName) {
   int w, h, n;
 
-  const char* im = "imgs/";
+  const char* im = PATH_PREFIX;
   char* imgLocation = new char[strlen(im) + strlen(imgName) + 1];
   strcpy(imgLocation, im);
   strcat(imgLocation, imgName);
@@ -150,7 +150,7 @@ void RendererImpl::Init() {
   coordProgram = Prog("Coord");
   litTexProgram = Prog("LitTex");
   spotProgram = Prog("Spot");
-
+  
   check = load_image("check.png");
   brick = load_image("bricks.png");
   stone = load_image("stone.png");
@@ -181,7 +181,7 @@ void RendererImpl::Init() {
   list.push_back(squ);
   list.back()->obj.matSpcCol = Vec3f(0.25f, 0.25f, 0.25f);
   list.back()->obj.shiny = 40.0f;
-  list.back()->obj.tex = check;
+  //list.back()->obj.tex = check;
 
   ground = Planef(Vec3f(0, 1, 0), 0.0f);
 
@@ -192,7 +192,7 @@ void RendererImpl::Init() {
   list.back()->obj.matDifCol = Vec3f(0.7f, 0.0f, 0.0f);
   list.back()->obj.matSpcCol = Vec3f(0.25f, 0.25f, 0.25f);
   list.back()->obj.shiny = 7.5f;
-  list.back()->obj.tex = brick;
+  //list.back()->obj.tex = brick;
 
   auto sph = new Sphere;  // Sphere
   sph->build(0.5f);
@@ -201,7 +201,7 @@ void RendererImpl::Init() {
   list.back()->obj.matDifCol = Vec3f(0.0f, 0.3f, 0.0f);
   list.back()->obj.matSpcCol = Vec3f(0.2f, 1.0f, 0.2f);
   list.back()->obj.shiny = 25.0f;
-  list.back()->obj.tex = stone;
+  //list.back()->obj.tex = stone;
 
   auto tor = new Torus;  // Torus
   tor->build(0.5f, 0.25f);
@@ -210,7 +210,7 @@ void RendererImpl::Init() {
   list.back()->obj.matDifCol = Vec3f(0.0f, 0.0f, 0.5f);
   list.back()->obj.matSpcCol = Vec3f(0.3f, 0.3f, 1.0f);
   list.back()->obj.shiny = 15.0f;
-  list.back()->obj.tex = wood;
+  //list.back()->obj.tex = wood;
 
   auto light = new Sphere;  // Light Sphere
   light->build(0.03125f);
@@ -320,20 +320,9 @@ void RendererImpl::Draw() {
   scene.camPose.r.SetValue(Vec3f(0, 0, -1), Vec3f(0, 1, 0), -scene.camPose.t, Vec3f(0, 1, 0));
   scene.camPos = scene.camPose.t;  // Look into why I need this
 
-  /*
-  if (intersect) {
-    Vec3f i;
-    Planef plane(Vec3f(0, 1, 0), intPoint.obj.modelPose.t.y);
-    Linef line(nearInWorld3, farInWorld3);
-    plane.Intersect(line, i);
-    hitShape->obj.modelPose.t.x += diffPos.x * 0.0125;
-    hitShape->obj.modelPose.t.z += diffPos.y * 0.0125;
-  }
-  */
-
   glViewport(0, 0, width, height);
 
-  glClearColor(0.05f, 0.05f, 0.05f, 0);
+  glClearColor(0.05f, 1.00f, 0.05f, 0);
   glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
 

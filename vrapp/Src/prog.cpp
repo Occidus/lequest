@@ -6,7 +6,7 @@
 #include <cstring>
 #include <string>
 
-//#include "learning.h"
+#include "learningvr.h"
 #include "stb.h"
 
 namespace {
@@ -43,7 +43,7 @@ char* concatenate(const char* a, const char* b) {
 }  // namespace
 
 void Prog::create(const char* baseShaderName) {
-  const char* pr = "progs/";
+  const char* pr = PATH_PREFIX;
   const char* fs = "-Fragment.fs";
   const char* vs = "-Vertex.vs";
   char* bsfs = new char[strlen(pr) + strlen(baseShaderName) + strlen(fs) + 1];
@@ -139,7 +139,6 @@ Prog::Ui Prog::loc(const std::string& str) const {
   return it->second;
 }
 
-/*
 void Prog::load(const Scene& scene) {
   glUniform3fv(loc("lightPos").i, 1, &scene.lightPose.t.x);
   glUniformMatrix4fv(loc("lightFromWorld").i, 1, GL_FALSE, scene.lightPose.Inverted().GetMatrix4().m);
@@ -148,4 +147,3 @@ void Prog::load(const Scene& scene) {
   glUniform3fv(loc("camPos").i, 1, &scene.camPos.x);
   glUniform1i(loc("samp").i, 0);
 }
-*/
