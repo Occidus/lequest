@@ -2178,6 +2178,9 @@ struct Pose {
     SetValue(rotation, translation);
   }
 
+  /*Pose(const Matrix4& m) {
+  }*/
+
   void SetValue(const Q& rotation, const V& translation) {
     r = rotation;
     t = translation;

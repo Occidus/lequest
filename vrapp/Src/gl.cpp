@@ -181,7 +181,7 @@ void RendererImpl::Init() {
   list.push_back(squ);
   list.back()->obj.matSpcCol = Vec3f(0.25f, 0.25f, 0.25f);
   list.back()->obj.shiny = 40.0f;
-  //list.back()->obj.tex = check;
+  list.back()->obj.tex = check;
 
   ground = Planef(Vec3f(0, 1, 0), 0.0f);
 
@@ -192,7 +192,7 @@ void RendererImpl::Init() {
   list.back()->obj.matDifCol = Vec3f(0.7f, 0.0f, 0.0f);
   list.back()->obj.matSpcCol = Vec3f(0.25f, 0.25f, 0.25f);
   list.back()->obj.shiny = 7.5f;
-  //list.back()->obj.tex = brick;
+  list.back()->obj.tex = brick;
 
   auto sph = new Sphere;  // Sphere
   sph->build(0.5f);
@@ -201,7 +201,7 @@ void RendererImpl::Init() {
   list.back()->obj.matDifCol = Vec3f(0.0f, 0.3f, 0.0f);
   list.back()->obj.matSpcCol = Vec3f(0.2f, 1.0f, 0.2f);
   list.back()->obj.shiny = 25.0f;
-  //list.back()->obj.tex = stone;
+  list.back()->obj.tex = stone;
 
   auto tor = new Torus;  // Torus
   tor->build(0.5f, 0.25f);
@@ -210,7 +210,7 @@ void RendererImpl::Init() {
   list.back()->obj.matDifCol = Vec3f(0.0f, 0.0f, 0.5f);
   list.back()->obj.matSpcCol = Vec3f(0.3f, 0.3f, 1.0f);
   list.back()->obj.shiny = 15.0f;
-  //list.back()->obj.tex = wood;
+  list.back()->obj.tex = wood;
 
   auto light = new Sphere;  // Light Sphere
   light->build(0.03125f);
@@ -312,42 +312,41 @@ void RendererImpl::Drag(Vec3f newPos) {
 }
 
 void RendererImpl::Draw() {
-  scene.camPose.t.x = sin(theta) * rad;
-  scene.camPose.t.z = cos(theta) * rad;
-  scene.camPose.t.y = camHeight;
+  Vec4f camPos = Vec4f(0,0,0,1);
+  camPos = camPose* camPos;
+  scene.camPose.t = Vec3f(&camPos.x);
   scene.camPos = scene.camPose.t;
 
-  scene.camPose.r.SetValue(Vec3f(0, 0, -1), Vec3f(0, 1, 0), -scene.camPose.t, Vec3f(0, 1, 0));
-  scene.camPos = scene.camPose.t;  // Look into why I need this
+  scene.camPose.r.SetValue(camPose);
 
   glViewport(0, 0, width, height);
 
-  glClearColor(0.05f, 1.00f, 0.05f, 0);
+  glClearColor(0.1f, 0.1f, 0.1f, 0);
   glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
 
   float aspect = float(width) / float(height);
-  scene.projMat = Perspective(fovy, aspect, 0.1f, 100.0f);
+  scene.projMat = camFrustum;
 
-  //ray.draw(scene, program);
+  ray.draw(scene, program);
 
   if (scene.camPose.t.y <= 0.0f) {
-    //grid.draw(scene, program);
+    grid.draw(scene, program);
   } else {
-    //list[0]->draw(scene, litTexProgram);
+    list[0]->draw(scene, litTexProgram);
   }
   if (intersect) {
-    //intPoint.draw(scene, program);
+    intPoint.draw(scene, program);
   }
   for (int i = 1; i < 4; i++) {
-    //list[i]->draw(scene, litTexProgram);
+    list[i]->draw(scene, litTexProgram);
   }
 
-  //scene.lightPose.t = list[4]->obj.modelPose.t;
-  //list[4]->draw(scene, program);
+  scene.lightPose.t = list[4]->obj.modelPose.t;
+  list[4]->draw(scene, program);
 
-  //hull.draw(scene, program);
-  //curve.draw(scene, program);
+  hull.draw(scene, program);
+  curve.draw(scene, program);
 
-  //dots.draw(scene, litProgram, iterate);
+  dots.draw(scene, litProgram, iterate);
 }

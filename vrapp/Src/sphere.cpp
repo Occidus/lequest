@@ -46,11 +46,9 @@ void Sphere::build(float radi, Vec3f col) {
   obj.end();
 }
 
-/*
 void Sphere::draw(const Scene& scene, Prog p) {
   obj.draw(scene, p);
 }
-*/
 
 bool Sphere::intersect(Vec3f p0, Vec3f p1, Vec3f& intersection) {
   Vec3f rayDir = (p1 - p0).Normalized();

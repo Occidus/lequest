@@ -15,7 +15,7 @@ class Cube : public Shape {
 
   void build(Matrix4f m);
 
-  //virtual void draw(const Scene& scene, Prog p);
+  virtual void draw(const Scene& scene, Prog p);
 
   virtual bool intersect(Vec3f p0, Vec3f p1, Vec3f& intersection);
 };

@@ -49,11 +49,9 @@ void Torus::build(float rad1, float rad2) {
   obj.end();
 }
 
-/*
 void Torus::draw(const Scene& scene, Prog p) {
   obj.draw(scene, p);
 }
-*/
 
 /*
 float Torus::eval(Vec3f p0) {

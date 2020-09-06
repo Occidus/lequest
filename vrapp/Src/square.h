@@ -17,7 +17,7 @@ class Square : public Shape {
 
   void build(float sd, float ss, float s);
 
-  //virtual void draw(const Scene& scene, Prog p);
+  virtual void draw(const Scene& scene, Prog p);
 
   virtual bool intersect(Vec3f p0, Vec3f p1, Vec3f& intersection);
 };

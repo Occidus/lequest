@@ -30,11 +30,14 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include <GLES3/gl3ext.h>
 
 #include "render.h"
+#include "linear.h"
 #include "learningvr.h"
 
 #if !defined(EGL_OPENGL_ES3_BIT_KHR)
 #define EGL_OPENGL_ES3_BIT_KHR 0x0040
 #endif
+
+
 
 // EXT_texture_border_clamp
 #ifndef GL_CLAMP_TO_BORDER
@@ -75,6 +78,10 @@ static double GetTimeInSeconds() {
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
     return (now.tv_sec * 1e9 + now.tv_nsec) * 0.000000001;
+}
+
+const r3::Matrix4f& ToR3(const ovrMatrix4f & om) {
+    return *reinterpret_cast<const r3::Matrix4f*>(&om);
 }
 
 /*
@@ -1191,10 +1198,9 @@ static ovrLayerProjection2 ovrRenderer_RenderFrame(
 
         ovrFramebuffer_Resolve(frameBuffer);
         ovrFramebuffer_Advance(frameBuffer);
-        if (eye==0){
-            GL(glClearColor(0.125f, 0.0f, 0.125f, 1.0f));
-            renderer->rend->Draw();
-        }
+        renderer->rend->camFrustum = ToR3(projectionMatrixTransposed[eye]);//.Transpose();
+        renderer->rend->camPose    = ToR3(eyeViewMatrixTransposed[eye]);//.Transpose();
+        renderer->rend->Draw();
     }
 
     ovrFramebuffer_SetNone();

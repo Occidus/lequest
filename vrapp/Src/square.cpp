@@ -21,11 +21,9 @@ void Square::build(float sd, float ss, float s) {
   obj.end();
 }
 
-/*
 void Square::draw(const Scene& scene, Prog p) {
   obj.draw(scene, p);
 }
-*/
 
 bool Square::intersect(Vec3f p0, Vec3f p1, Vec3f& intersection) {
   Planef plane(Vec3f(0, 1, 0), 0.0f);

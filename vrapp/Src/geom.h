@@ -3,8 +3,8 @@
 
 #include "learningvr.h"
 #include "linear.h"
-//#include "prog.h"
-//#include "scene.h"
+#include "prog.h"
+#include "scene.h"
 
 class Geom {
  public:
@@ -47,5 +47,5 @@ class Geom {
 
   void position(r3::Vec3f cords);
 
-  //void draw(const Scene& scene, Prog p);
+  void draw(const Scene& scene, Prog p);
 };

@@ -15,7 +15,7 @@ class Torus : public Shape {
 
   void build(float rad1 = 0.5, float rad2 = 0.25);
 
-  //virtual void draw(const Scene& scene, Prog p);
+  virtual void draw(const Scene& scene, Prog p);
 
   // float eval(Vec3f p0);
 

@@ -23,10 +23,12 @@ void Tetra::build(int np) {
   }
 }
 
-/*float Tetra::Angle( const Vec3f & a, const Vec3f & b, const Vec3f & c) {
+/*
+float Tetra::Angle( const Vec3f & a, const Vec3f & b, const Vec3f & c) {
   float d = Dot((b-a).Normalized(), (c-a).Normalized());
   return ToDegrees(acos(d));
-}*/
+}
+*/
 
 void Tetra::move(Vec3f m) {
   pos = m;
@@ -46,7 +48,6 @@ void Tetra::reset() {
   }
 }
 
-/*
 void Tetra::draw(const Scene& scene, Prog p, int iterate) {
   if (iterate == 1) {
     for (int i = 1; i < numPoints; i++) {
@@ -71,7 +72,6 @@ void Tetra::draw(const Scene& scene, Prog p, int iterate) {
     sph->draw(scene, p);
   }
 }
-*/
 
 /*
 bool Tetra::intersect(Vec3f p0, Vec3f p1, Vec3f& intersection) {

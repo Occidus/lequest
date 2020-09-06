@@ -62,11 +62,9 @@ void Cube::build(Matrix4f m) {
   obj.end();
 }
 
-/*
 void Cube::draw(const Scene& scene, Prog p) {
   obj.draw(scene, p);
 }
-*/
 
 bool Cube::intersect(Vec3f p0, Vec3f p1, Vec3f& intersection) {
   Matrix4f worldFromObj = obj.modelPose.GetMatrix4() * scale;
