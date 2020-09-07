@@ -9,7 +9,7 @@ in highp vec3 fcol;
 in highp vec3 fnorm;
 in highp vec3 fpos;
 in highp vec2 ftex;
-out mediump vec4 fragColor;
+out highp vec4 fragColor;
 void main()
 {
 	highp vec3 matDifCol = texture(samp, ftex).xyz;

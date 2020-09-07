@@ -1458,7 +1458,7 @@ static void app_handle_cmd(struct android_app* app, int32_t cmd) {
 void copy_assets(AAssetManager* mgr) {
     AAssetDir* assetDir = AAssetManager_openDir(mgr, "");
     const char* filename = (const char*)NULL;
-    static const int SZ = 1 << 20;
+    static const int SZ = 1 << 12;
     char* buf = new char[SZ];
     while ((filename = AAssetDir_getNextFileName(assetDir)) != NULL) {
         AAsset* asset = AAssetManager_open(mgr, filename, AASSET_MODE_STREAMING);
@@ -1468,11 +1468,14 @@ void copy_assets(AAssetManager* mgr) {
         strcat(fullPath, filename);
         FILE* out = fopen(fullPath, "w");
         ALOGV("writing file: %s", fullPath);
+        int total_bytes_written = 0;
         while ((nb_read = AAsset_read(asset, buf, SZ)) > 0) {
             fwrite(buf, nb_read, 1, out);
+            total_bytes_written += nb_read;
         }
         fclose(out);
         AAsset_close(asset);
+        ALOGV("wrote file: %s, %d bytes", fullPath, total_bytes_written);
     }
     delete[] buf;
     AAssetDir_close(assetDir);

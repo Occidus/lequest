@@ -1677,7 +1677,7 @@ class Quaternion {
 
     tr = m(0, 0) + m(1, 1) + m(2, 2);
 
-    if (tr > R3_ZERO) {
+    /*if (tr > R3_ZERO) {
       s = T(sqrt(tr + m(3, 3)));
       q[3] = T(s * 0.5);
       s = T(0.5) / s;
@@ -1702,9 +1702,36 @@ class Quaternion {
       q[3] = T((m(j, k) - m(k, j)) * s);
       q[j] = T((m(i, j) + m(j, i)) * s);
       q[k] = T((m(i, k) + m(k, i)) * s);
+    }*/
+
+    if (tr > 0) { 
+      float S = sqrt(tr+1.0) * 2; // S=4*qw 
+      q[3] = 0.25 * S;
+      q[0] = (m(2,1) - m(1,2)) / S;
+      q[1] = (m(0,2) - m(2,0)) / S; 
+      q[2] = (m(1,0) - m(0,1)) / S; 
+    } else if ((m(0,0) > m(1,1))&(m(0,0) > m(2,2))) { 
+      float S = sqrt(1.0 + m(0,0) - m(1,1) - m(2,2)) * 2; // S=4*qx 
+      q[3] = (m(2,1) - m(1,2)) / S;
+      q[0] = 0.25 * S;
+      q[1] = (m(0,1) + m(1,0)) / S; 
+      q[2] = (m(0,2) + m(2,0)) / S; 
+    } else if (m(1,1) > m(2,2)) { 
+      float S = sqrt(1.0 + m(1,1) - m(0,0) - m(2,2)) * 2; // S=4*qy
+      q[3] = (m(0,2) - m(2,0)) / S;
+      q[0] = (m(0,1) + m(1,0)) / S; 
+      q[1] = 0.25 * S;
+      q[2] = (m(1,2) + m(2,1)) / S; 
+    } else { 
+      float S = sqrt(1.0 + m(2,2) - m(0,0) - m(1,1)) * 2; // S=4*qz
+      q[3] = (m(1,0) - m(0,1)) / S;
+      q[0] = (m(0,2) + m(2,0)) / S;
+      q[1] = (m(1,2) + m(2,1)) / S;
+      q[2] = 0.25 * S;
     }
 
     return *this;
+
   }
 
   Quaternion& SetValue(const Vec3<T>& axis, T theta) {

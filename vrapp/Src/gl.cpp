@@ -93,6 +93,35 @@ Renderer* CreateRenderer() {
   return new RendererImpl();
 }
 
+namespace {
+
+struct FileContents {
+  int size;
+  char *data;
+};
+
+FileContents getFileContents(const char* filename) {
+  FILE* fp = fopen(filename, "r");
+  if (fp == nullptr) {
+    printf("Failed to open file: %s\n", filename);
+    exit(1);
+  }
+  FileContents ret;
+  fseek(fp, 0, SEEK_END);
+  ret.size = ftell(fp);
+  fseek(fp, 0, SEEK_SET);
+  ret.data = new char[ret.size + 1];
+  size_t numRead = fread(ret.data, 1, size_t(ret.size), fp);
+  if (size_t(ret.size) != numRead) {
+    printf("Failed to read all %s\n", filename);
+    exit(20);
+  }
+  ret.data[ret.size] = 0;
+  fclose(fp);
+  return ret;
+}
+}
+
 static GLuint load_image(const char* imgName) {
   int w, h, n;
 
@@ -104,20 +133,39 @@ static GLuint load_image(const char* imgName) {
   GLuint out;
   unsigned char* img;
 
-  img = image_load(imgLocation, &w, &h, &n);
+  FileContents fc = getFileContents(imgLocation);
+  ALOGV("loaded %d bytes from %s", fc.size, imgLocation);
 
+  img = image_load_from_memory(fc.data, fc.size, &w, &h, &n);
+
+  delete [] fc.data;
   delete[] imgLocation;
 
   uint32_t* imgi = new uint32_t[w * h];
 
-  for (int i = 0; i < w * h; i++) {
-    imgi[i] = uint32_t(img[i * 3 + 0]) << 0 | uint32_t(img[i * 3 + 1]) << 8 | uint32_t(img[i * 3 + 2]) << 16;
+  for (int j = 0; j < h; j++) {
+    for (int i = 0; i < w; i++) {
+      int ij = i*j;
+      if( (i % 8) == 0 ) {
+        imgi[ij] = 0xff00ff00;
+      } else if ( (j % 8) == 0) {
+        imgi[ij] = 0xff0000ff;        
+      } else {
+        imgi[ij] = uint32_t(img[ij * n + 0]) << 0 | uint32_t(img[ij * n + 1]) << 8 | uint32_t(img[ij * n + 2]) << 16;
+      }
+    }
   }
 
   glGenTextures(GLsizei(n), &out);
   glBindTexture(GL_TEXTURE_2D, out);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, imgi);
-  glGenerateMipmap(GL_TEXTURE_2D);
+  glTexStorage2D(GL_TEXTURE_2D, 4, GL_RGBA8, w, h);
+  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, imgi);
+  ALOGV("texture %s: w=%d, h=%d", imgName, w, h);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  //glGenerateMipmap(GL_TEXTURE_2D);
   delete[] imgi;
   image_free(img);
   return out;
@@ -166,6 +214,8 @@ void RendererImpl::Init() {
   litTexProgram = Prog("LitTex");
   spotProgram = Prog("Spot");
   
+  ALOGV("cass");
+
   check = load_image("check.png");
   brick = load_image("bricks.png");
   stone = load_image("stone.png");
@@ -328,7 +378,7 @@ void RendererImpl::Drag(Vec3f newPos) {
 
 void RendererImpl::Draw() {
   Vec4f camPos = Vec4f(0,0,0,1);
-  camPos = camPose* camPos;
+  camPos = camPose * camPos;
   scene.camPose.t = Vec3f(&camPos.x);
   scene.camPos = scene.camPose.t;
 
@@ -338,7 +388,7 @@ void RendererImpl::Draw() {
     ALOGV("camPose = (%f, %f, %f, %f) (%f, %f, %f)", f[0], f[1], f[2], f[3], f[4], f[5], f[6]);
   }
 
-  scene.camPose.r = Rotationf(camPose).Inverted();
+  scene.camPose.r = Rotationf(camPose);//.Inverted();
 
   glViewport(0, 0, width, height);
 
