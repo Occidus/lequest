@@ -1054,8 +1054,6 @@ static void ovrRenderer_Clear(ovrRenderer* renderer) {
 static void
 ovrRenderer_Create(ovrRenderer* renderer, const ovrJava* java) {
     renderer->NumBuffers = VRAPI_FRAME_LAYER_EYE_MAX;
-    renderer->rend = CreateRenderer();
-    renderer->rend->Init();
 
     // Create the frame buffers.
     for (int eye = 0; eye < renderer->NumBuffers; eye++) {
@@ -1065,6 +1063,9 @@ ovrRenderer_Create(ovrRenderer* renderer, const ovrJava* java) {
             vrapi_GetSystemPropertyInt(java, VRAPI_SYS_PROP_SUGGESTED_EYE_TEXTURE_WIDTH),
             vrapi_GetSystemPropertyInt(java, VRAPI_SYS_PROP_SUGGESTED_EYE_TEXTURE_HEIGHT));
     }
+    renderer->rend = CreateRenderer();
+    renderer->rend->Init();
+    renderer->rend->SetWindowSize(renderer->FrameBuffer[0].Width, renderer->FrameBuffer[0].Height);
 }
 
 static void ovrRenderer_Destroy(ovrRenderer* renderer) {
@@ -1170,37 +1171,40 @@ static ovrLayerProjection2 ovrRenderer_RenderFrame(
         ovrFramebuffer* frameBuffer = &renderer->FrameBuffer[eye];
         ovrFramebuffer_SetCurrent(frameBuffer);
 
-        GL(glUseProgram(scene->Program.Program));
-        GL(glBindBufferBase(
-            GL_UNIFORM_BUFFER,
-            scene->Program.UniformBinding[ovrUniform::Index::SCENE_MATRICES],
-            scene->SceneMatrices));
-        if (scene->Program.UniformLocation[ovrUniform::Index::VIEW_ID] >=
+        if (false) {
+            GL(glUseProgram(scene->Program.Program));
+            GL(glBindBufferBase(
+                GL_UNIFORM_BUFFER,
+                scene->Program.UniformBinding[ovrUniform::Index::SCENE_MATRICES],
+                scene->SceneMatrices));
+            if (scene->Program.UniformLocation[ovrUniform::Index::VIEW_ID] >=
             0) // NOTE: will not be present when multiview path is enabled.
-        {
-            GL(glUniform1i(scene->Program.UniformLocation[ovrUniform::Index::VIEW_ID], eye));
-        }
-        GL(glEnable(GL_SCISSOR_TEST));
-        GL(glDepthMask(GL_TRUE));
-        GL(glEnable(GL_DEPTH_TEST));
-        GL(glDepthFunc(GL_LEQUAL));
-        GL(glEnable(GL_CULL_FACE));
-        GL(glCullFace(GL_BACK));
-        GL(glViewport(0, 0, frameBuffer->Width, frameBuffer->Height));
-        GL(glScissor(0, 0, frameBuffer->Width, frameBuffer->Height));
-        GL(glClearColor(0.125f, 0.0f, 0.125f, 1.0f));
-        GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-        GL(glBindVertexArray(scene->Cube.VertexArrayObject));
-        GL(glDrawElementsInstanced(
-            GL_TRIANGLES, scene->Cube.IndexCount, GL_UNSIGNED_SHORT, nullptr, NUM_INSTANCES));
-        GL(glBindVertexArray(0));
-        GL(glUseProgram(0));
+            {
+                GL(glUniform1i(scene->Program.UniformLocation[ovrUniform::Index::VIEW_ID], eye));
+            }
+            GL(glEnable(GL_SCISSOR_TEST));
+            GL(glDepthMask(GL_TRUE));
+            GL(glEnable(GL_DEPTH_TEST));
+            GL(glDepthFunc(GL_LEQUAL));
+            GL(glEnable(GL_CULL_FACE));
+            GL(glCullFace(GL_BACK));
+            GL(glViewport(0, 0, frameBuffer->Width, frameBuffer->Height));
+            GL(glScissor(0, 0, frameBuffer->Width, frameBuffer->Height));
+            GL(glClearColor(0.125f, 0.0f, 0.125f, 1.0f));
+            GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+            GL(glBindVertexArray(scene->Cube.VertexArrayObject));
+            GL(glDrawElementsInstanced(
+                GL_TRIANGLES, scene->Cube.IndexCount, GL_UNSIGNED_SHORT, nullptr, NUM_INSTANCES));
+            GL(glBindVertexArray(0));
+            GL(glUseProgram(0));
 
+        }
         ovrFramebuffer_Resolve(frameBuffer);
         ovrFramebuffer_Advance(frameBuffer);
-        if (eye == 1){
-            renderer->rend->camFrustum = ToR3(projectionMatrixTransposed[eye]).Transpose();
-            renderer->rend->camPose    = ToR3(eyeViewMatrixTransposed[eye]).Transpose();
+
+        if (true){
+            renderer->rend->camFrustum = ToR3(projectionMatrixTransposed[eye]);
+            renderer->rend->camPose    = ToR3(eyeViewMatrixTransposed[eye]).Inverted();
             renderer->rend->Draw();
         }
     }
@@ -1277,6 +1281,7 @@ static void ovrApp_HandleVrModeChanges(ovrApp* app) {
             ALOGV("        vrapi_EnterVrMode()");
 
             app->Ovr = vrapi_EnterVrMode(&parms);
+            vrapi_SetTrackingSpace(app->Ovr, VRAPI_TRACKING_SPACE_STAGE);
 
             ALOGV("        eglGetCurrentSurface( EGL_DRAW ) = %p", eglGetCurrentSurface(EGL_DRAW));
 

@@ -4,6 +4,10 @@
 
 #include <cstring>
 
+#define USE_ANDROID 1
+#if USE_ANDROID
+#include <android/log.h>
+#endif
 
 
 #include "learningvr.h"
@@ -20,6 +24,17 @@
 #include "stb.h"
 
 using namespace r3;
+
+#if USE_ANDROID
+#define R3_LOG_TAG "VrCubeWorld"
+
+#define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, R3_LOG_TAG, __VA_ARGS__)
+#define ALOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, R3_LOG_TAG, __VA_ARGS__)
+#else
+#define ALOGE(...)
+#define ALOGV(...)
+#endif
+
 
 /*
   You need dev packages to build and run this:
@@ -317,7 +332,13 @@ void RendererImpl::Draw() {
   scene.camPose.t = Vec3f(&camPos.x);
   scene.camPos = scene.camPose.t;
 
-  scene.camPose.r.SetValue(camPose);
+  //ALOGV("camPos = (%f, %f, %f)", camPos.x, camPos.y, camPos.z);
+  if (false) {
+    float *f = &scene.camPose.r.x;
+    ALOGV("camPose = (%f, %f, %f, %f) (%f, %f, %f)", f[0], f[1], f[2], f[3], f[4], f[5], f[6]);
+  }
+
+  scene.camPose.r = Rotationf(camPose).Inverted();
 
   glViewport(0, 0, width, height);
 
