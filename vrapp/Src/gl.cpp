@@ -133,39 +133,32 @@ static GLuint load_image(const char* imgName) {
   GLuint out;
   unsigned char* img;
 
-  FileContents fc = getFileContents(imgLocation);
-  ALOGV("loaded %d bytes from %s", fc.size, imgLocation);
+  img = image_load(imgLocation, &w, &h, &n);
 
-  img = image_load_from_memory(fc.data, fc.size, &w, &h, &n);
-
-  delete [] fc.data;
   delete[] imgLocation;
 
   uint32_t* imgi = new uint32_t[w * h];
 
   for (int j = 0; j < h; j++) {
     for (int i = 0; i < w; i++) {
-      int ij = i*j;
-      if( (i % 8) == 0 ) {
+      int ij = i+j*w;
+      /*
+      if( (i % 32) == 0 ) {
         imgi[ij] = 0xff00ff00;
-      } else if ( (j % 8) == 0) {
-        imgi[ij] = 0xff0000ff;        
-      } else {
+      } else if ( (j % 32) == 0) {
+        imgi[ij] = 0xff0000ff;
+      } else */
+      {
         imgi[ij] = uint32_t(img[ij * n + 0]) << 0 | uint32_t(img[ij * n + 1]) << 8 | uint32_t(img[ij * n + 2]) << 16;
       }
     }
   }
 
-  glGenTextures(GLsizei(n), &out);
+  glGenTextures(1, &out);
   glBindTexture(GL_TEXTURE_2D, out);
   glTexStorage2D(GL_TEXTURE_2D, 4, GL_RGBA8, w, h);
   glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, imgi);
-  ALOGV("texture %s: w=%d, h=%d", imgName, w, h);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  //glGenerateMipmap(GL_TEXTURE_2D);
+  glGenerateMipmap(GL_TEXTURE_2D);
   delete[] imgi;
   image_free(img);
   return out;
@@ -196,6 +189,7 @@ void RendererImpl::Init() {
   scene.lightPose.r = Quaternionf(Vec3f(1, 0, 0), ToRadians(-90.0f));
   scene.lightPose.t = Vec3f(0, 1, 0);
   scene.lightCol = Vec3f(1, 1, 1);
+  scene.worldScale = Matrix4f::Scale(2);
 
   GLint version_maj = 0;
   GLint version_min = 0;
@@ -280,7 +274,7 @@ void RendererImpl::Init() {
   auto light = new Sphere;  // Light Sphere
   light->build(0.03125f);
   list.push_back(light);
-  list.back()->obj.modelPose.t = Vec3f(0.0f, 1.0f, 0.0f);
+  list.back()->obj.modelPose.t = Vec3f(0.0f, 1.5f, 0.0f);
 
   points.push_back(Vec3f(-1.0f, 0.0f, 1.0f));
   points.push_back(Vec3f(-1.0f, 1.0f, 1.0f));
@@ -377,9 +371,7 @@ void RendererImpl::Drag(Vec3f newPos) {
 }
 
 void RendererImpl::Draw() {
-  Vec4f camPos = Vec4f(0,0,0,1);
-  camPos = camPose * camPos;
-  scene.camPose.t = Vec3f(&camPos.x);
+  scene.camPose.SetValue(camPose);
   scene.camPos = scene.camPose.t;
 
   //ALOGV("camPos = (%f, %f, %f)", camPos.x, camPos.y, camPos.z);
@@ -387,8 +379,6 @@ void RendererImpl::Draw() {
     float *f = &scene.camPose.r.x;
     ALOGV("camPose = (%f, %f, %f, %f) (%f, %f, %f)", f[0], f[1], f[2], f[3], f[4], f[5], f[6]);
   }
-
-  scene.camPose.r = Rotationf(camPose);//.Inverted();
 
   glViewport(0, 0, width, height);
 

@@ -2205,8 +2205,16 @@ struct Pose {
     SetValue(rotation, translation);
   }
 
-  /*Pose(const Matrix4& m) {
-  }*/
+  explicit Pose(const Matrix4<T>& m) {
+    SetValue(m);
+  }
+
+  void SetValue(const Matrix4<T>& m) {
+    r = Quaternion<T>(m);
+    Vec4<T> v = Vec4<T>(0,0,0,1);
+    v = m * camPos;
+    t = Vec3<T>(&v.x);
+  }
 
   void SetValue(const Q& rotation, const V& translation) {
     r = rotation;
