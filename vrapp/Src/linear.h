@@ -2212,7 +2212,7 @@ struct Pose {
   void SetValue(const Matrix4<T>& m) {
     r = Quaternion<T>(m);
     Vec4<T> v = Vec4<T>(0,0,0,1);
-    v = m * camPos;
+    v = m * v;
     t = Vec3<T>(&v.x);
   }
 

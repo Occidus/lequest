@@ -25,6 +25,7 @@ class Geom {
   float shiny = 10.0;
   GLuint tex;
   Vertex v;
+  bool scale = true;
 
   Geom();
 

@@ -11,6 +11,12 @@ struct Renderer {
   float theta = 0.0;
   bool intersect = false;
   int iterate = 0;
+
+  bool drawLeft = false;
+  bool drawRight = false;
+  r3::Posef leftPose;
+  r3::Posef rightPose;
+
   virtual void Init() = 0;
   virtual void Draw() = 0;
   virtual void SetWindowSize(int w, int h) = 0;

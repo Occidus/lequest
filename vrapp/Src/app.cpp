@@ -84,6 +84,10 @@ const r3::Matrix4f& ToR3(const ovrMatrix4f & om) {
     return *reinterpret_cast<const r3::Matrix4f*>(&om);
 }
 
+const r3::Posef& ToR3(const ovrPosef & op) {
+    return *reinterpret_cast<const r3::Posef*>(&op);
+}
+
 /*
 ================================================================================
 
@@ -1240,6 +1244,8 @@ struct ovrApp {
     int RenderThreadTid;
     bool BackButtonDownLastFrame;
     ovrRenderer Renderer;
+    ovrDeviceID left;
+    ovrDeviceID right;
 };
 
 static void ovrApp_Clear(ovrApp* app) {
@@ -1281,6 +1287,41 @@ static void ovrApp_HandleVrModeChanges(ovrApp* app) {
             ALOGV("        vrapi_EnterVrMode()");
 
             app->Ovr = vrapi_EnterVrMode(&parms);
+            /*app->left = ovrDeviceIdType_Invalid;
+            app->right = ovrDeviceIdType_Invalid;
+            for (ovrDeviceID deviceIndex = 0;; deviceIndex++) { // Come Back Here!
+                ovrInputCapabilityHeader capsHeader;
+
+                if (vrapi_EnumerateInputDevices(app->Ovr, deviceIndex, &capsHeader) < 0) {
+                    break; // no more devices
+                }
+
+                /// deviceID is not the same as deviceIndex!
+                ovrDeviceID deviceID = capsHeader.DeviceID;
+                if (deviceID == ovrDeviceIdType_Invalid) {
+                    ALOGV("HandleVRInputEvents - Invalid deviceID for deviceIndex=%u", deviceIndex);
+                    assert(deviceID != ovrDeviceIdType_Invalid);
+                    continue;
+                }
+
+                // Focus on remotes for now
+                if (capsHeader.Type == ovrControllerType_TrackedRemote) {
+                    ovrInputTrackedRemoteCapabilities remoteCaps;
+                    remoteCaps.Header = capsHeader;
+                    if (ovrSuccess == vrapi_GetInputDeviceCapabilities(app->Ovr, &remoteCaps.Header)) {
+                        bool isLeft = (remoteCaps.ControllerCapabilities & ovrControllerCaps_LeftHand) != 0;
+                        bool isRight = (remoteCaps.ControllerCapabilities & ovrControllerCaps_RightHand) != 0;
+                        // allow for single-handed controlles
+
+                        if (isLeft) {
+                            app->left = deviceID;
+                        }
+                        if (isRight) {
+                            app->right = deviceID;
+                        }
+                    }
+                }
+            }*/
             vrapi_SetTrackingSpace(app->Ovr, VRAPI_TRACKING_SPACE_STAGE);
 
             ALOGV("        eglGetCurrentSurface( EGL_DRAW ) = %p", eglGetCurrentSurface(EGL_DRAW));
@@ -1610,6 +1651,56 @@ void android_main(struct android_app* app) {
         ovrSimulation_Advance(&appState.Simulation, predictedDisplayTime - startTime);
 
         // Render eye images and setup the primary layer using ovrTracking2.
+
+        appState.left = ovrDeviceIdType_Invalid;
+        appState.right = ovrDeviceIdType_Invalid;
+
+        for (ovrDeviceID deviceIndex = 0;; deviceIndex++) { // Come Back Here!
+            ovrInputCapabilityHeader capsHeader;
+
+            if (vrapi_EnumerateInputDevices(appState.Ovr, deviceIndex, &capsHeader) < 0) {
+                break; // no more devices
+            }
+
+                /// deviceID is not the same as deviceIndex!
+            ovrDeviceID deviceID = capsHeader.DeviceID;
+            if (deviceID == ovrDeviceIdType_Invalid) {
+                ALOGV("HandleVRInputEvents - Invalid deviceID for deviceIndex=%u", deviceIndex);
+                assert(deviceID != ovrDeviceIdType_Invalid);
+                continue;
+            }
+
+                // Focus on remotes for now
+            if (capsHeader.Type == ovrControllerType_TrackedRemote) {
+                ovrInputTrackedRemoteCapabilities remoteCaps;
+                remoteCaps.Header = capsHeader;
+                if (ovrSuccess == vrapi_GetInputDeviceCapabilities(appState.Ovr, &remoteCaps.Header)) {
+                    bool isLeft = (remoteCaps.ControllerCapabilities & ovrControllerCaps_LeftHand) != 0;
+                    bool isRight = (remoteCaps.ControllerCapabilities & ovrControllerCaps_RightHand) != 0;
+
+                    if (isLeft) {
+                        appState.left = deviceID;
+                    }
+                    if (isRight) {
+                        appState.right = deviceID;
+                    }
+                }
+            }
+        }
+
+        ovrTracking remoteTracking;
+        ovrInputStateTrackedRemote state;
+        if (appState.left != ovrDeviceIdType_Invalid){
+            appState.Renderer.rend->drawLeft = true;
+            vrapi_GetInputTrackingState(appState.Ovr, appState.left, appState.DisplayTime, &remoteTracking);
+            appState.Renderer.rend->leftPose = ToR3(remoteTracking.HeadPose.Pose);
+            //vrapi_GetCurrentInputState(appState.Ovr, appState.left, &state.Header);
+        } if (appState.right != ovrDeviceIdType_Invalid){
+            appState.Renderer.rend->drawRight = true;
+            vrapi_GetInputTrackingState(appState.Ovr, appState.right, appState.DisplayTime, &remoteTracking);
+            appState.Renderer.rend->rightPose = ToR3(remoteTracking.HeadPose.Pose);
+            //vrapi_GetCurrentInputState(appState.Ovr, appState.right, &state.Header);
+        }
         const ovrLayerProjection2 worldLayer = ovrRenderer_RenderFrame(
             &appState.Renderer,
             &appState.Java,

@@ -271,6 +271,24 @@ void RendererImpl::Init() {
   list.back()->obj.shiny = 15.0f;
   list.back()->obj.tex = wood;
 
+  auto left = new Cube;  // Left Hand
+  left->build(Matrix4f::Scale(0.05f));
+  list.push_back(left);
+  list.back()->obj.modelPose.t = Vec3f(0, -1, 0);
+  list.back()->obj.matDifCol = Vec3f(0.85f, 0.15f, 0.15f);
+  list.back()->obj.matSpcCol = Vec3f(0.95f, 0.05f, 0.05f);
+  list.back()->obj.shiny = 15.0f;
+  list.back()->obj.scale = false;
+
+  auto right = new Cube;  // Right Hand
+  right->build(Matrix4f::Scale(0.05f));
+  list.push_back(right);
+  list.back()->obj.modelPose.t = Vec3f(0, -1, 0);
+  list.back()->obj.matDifCol = Vec3f(0.15f, 0.15f, 0.85f);
+  list.back()->obj.matSpcCol = Vec3f(0.05f, 0.05f, 0.95f);
+  list.back()->obj.shiny = 15.0f;
+  list.back()->obj.scale = false;
+
   auto light = new Sphere;  // Light Sphere
   light->build(0.03125f);
   list.push_back(light);
@@ -391,6 +409,14 @@ void RendererImpl::Draw() {
 
   ray.draw(scene, program);
 
+  if(drawLeft){
+    list[4]->obj.modelPose = leftPose;
+    list[4]->draw(scene, litProgram);
+  } if(drawRight){
+    list[5]->obj.modelPose = rightPose;
+    list[5]->draw(scene, litProgram);
+  }
+
   if (scene.camPose.t.y <= 0.0f) {
     grid.draw(scene, program);
   } else {
@@ -404,7 +430,7 @@ void RendererImpl::Draw() {
   }
 
   scene.lightPose.t = list[4]->obj.modelPose.t;
-  list[4]->draw(scene, program);
+  list[6]->draw(scene, program);
 
   hull.draw(scene, program);
   curve.draw(scene, program);
