@@ -1571,6 +1571,13 @@ void android_main(struct android_app* app) {
 
     const double startTime = GetTimeInSeconds();
 
+    int lTrHeld = 0;
+    int rTrHeld = 0;
+
+    float worldScale = 2.0;
+    float distance = 0;
+    float initDist = 0;
+
     while (app->destroyRequested == 0) {
         // Read all pending events.
         for (;;) {
@@ -1688,19 +1695,86 @@ void android_main(struct android_app* app) {
             }
         }
 
-        ovrTracking remoteTracking;
-        ovrInputStateTrackedRemote state;
+        ovrTracking remoteTrackingL;
+        ovrInputStateTrackedRemote stateL;
+        ovrTracking remoteTrackingR;
+        ovrInputStateTrackedRemote stateR;
         if (appState.left != ovrDeviceIdType_Invalid){
             appState.Renderer.rend->drawLeft = true;
-            vrapi_GetInputTrackingState(appState.Ovr, appState.left, appState.DisplayTime, &remoteTracking);
-            appState.Renderer.rend->leftPose = ToR3(remoteTracking.HeadPose.Pose);
-            //vrapi_GetCurrentInputState(appState.Ovr, appState.left, &state.Header);
+            vrapi_GetInputTrackingState(appState.Ovr, appState.left, appState.DisplayTime, &remoteTrackingL);
+            appState.Renderer.rend->leftPose = ToR3(remoteTrackingL.HeadPose.Pose);
+            stateL.Header.ControllerType = ovrControllerType_TrackedRemote;
+            vrapi_GetCurrentInputState(appState.Ovr, appState.left, &stateL.Header);
         } if (appState.right != ovrDeviceIdType_Invalid){
             appState.Renderer.rend->drawRight = true;
-            vrapi_GetInputTrackingState(appState.Ovr, appState.right, appState.DisplayTime, &remoteTracking);
-            appState.Renderer.rend->rightPose = ToR3(remoteTracking.HeadPose.Pose);
-            //vrapi_GetCurrentInputState(appState.Ovr, appState.right, &state.Header);
+            vrapi_GetInputTrackingState(appState.Ovr, appState.right, appState.DisplayTime, &remoteTrackingR);
+            appState.Renderer.rend->rightPose = ToR3(remoteTrackingR.HeadPose.Pose);
+            stateR.Header.ControllerType = ovrControllerType_TrackedRemote;
+            vrapi_GetCurrentInputState(appState.Ovr, appState.right, &stateR.Header);
         }
+
+        if (stateL.GripTrigger >= 0.95 && stateR.GripTrigger >= 0.95) {
+            r3::Vec3f lPos = appState.Renderer.rend->leftPose.t;
+            r3::Vec3f rPos = appState.Renderer.rend->rightPose.t;
+            float dx = lPos.x - rPos.x;
+            float dy = lPos.y - rPos.y;
+            float dz = lPos.z - rPos.z;
+            if (initDist == 0) {
+                initDist = sqrt((dx*dx)+(dy*dy)+(dz*dz));
+            } else {
+                distance = sqrt((dx*dx)+(dy*dy)+(dz*dz));
+            }
+        } else {
+            if (initDist != 0 && distance != 0) {
+                worldScale = worldScale * (distance/initDist);
+                appState.Renderer.rend->worldScale = worldScale;
+            } 
+            initDist = 0;
+            distance = 0;
+        }if (initDist != 0 && distance != 0) {
+            appState.Renderer.rend->ReScale(worldScale * (distance/initDist));
+        } 
+
+        if (stateL.IndexTrigger >= 0.95) {
+            r3::Posef worldFromLc = appState.Renderer.rend->leftPose;
+            r3::Vec3f nIW3 = worldFromLc * r3::Vec3f(0,0,0);
+            r3::Vec3f fIW3 = worldFromLc * r3::Vec3f(0,0,-100);
+
+            appState.Renderer.rend->RayInWorld(nIW3, fIW3);
+            if (lTrHeld == 0) {
+                appState.Renderer.rend->Intersect(nIW3, fIW3);
+            } else {
+                r3::Vec3f i;
+
+                r3::Linef line(nIW3, fIW3);
+                r3::Planef plane(r3::Vec3f(0, 1, 0), appState.Renderer.rend->intLoc.y);
+                plane.Intersect(line, i);
+                appState.Renderer.rend->Drag(i);
+            }
+        }else {
+            lTrHeld = 0;
+        }
+
+        if (stateR.IndexTrigger >= 0.95) {
+            r3::Posef worldFromRc = appState.Renderer.rend->rightPose;
+            r3::Vec3f nIW3 = worldFromRc * r3::Vec3f(0,0,0);
+            r3::Vec3f fIW3 = worldFromRc * r3::Vec3f(0,0,-100);
+
+            appState.Renderer.rend->RayInWorld(nIW3, fIW3);
+            if (rTrHeld == 0) {
+                appState.Renderer.rend->Intersect(nIW3, fIW3);
+            } else {
+                r3::Vec3f i;
+
+                r3::Linef line(nIW3, fIW3);
+                r3::Planef plane(r3::Vec3f(0, 1, 0), appState.Renderer.rend->intLoc.y);
+                plane.Intersect(line, i);
+                appState.Renderer.rend->Drag(i);
+            }
+        } else {
+            rTrHeld = 0;
+        }
+
         const ovrLayerProjection2 worldLayer = ovrRenderer_RenderFrame(
             &appState.Renderer,
             &appState.Java,

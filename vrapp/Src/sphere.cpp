@@ -46,17 +46,22 @@ void Sphere::build(float radi, Vec3f col) {
   obj.end();
 }
 
+void Sphere::radius(float ra, Vec3f colo) {
+  build(ra, colo);
+}
+
 void Sphere::draw(const Scene& scene, Prog p) {
   obj.draw(scene, p);
 }
 
-bool Sphere::intersect(Vec3f p0, Vec3f p1, Vec3f& intersection) {
+bool Sphere::intersect(Vec3f p0, Vec3f p1, float ws, Vec3f& intersection) {
+  float rad = r*ws;
   Vec3f rayDir = (p1 - p0).Normalized();
   Vec3f ce = obj.modelPose.t;
   Vec3f oc = p0 - ce;  // ray origin in object space
   float a = Dot(rayDir, rayDir);
   float b = 2 * Dot(rayDir, oc);
-  float c = Dot(oc, oc) - r * r;
+  float c = Dot(oc, oc) - rad * rad;
   float discr = b * b - 4 * a * c;
   float r1 = (-b - sqrt(discr)) / (2 * a);
   float r2 = (-b + sqrt(discr)) / (2 * a);

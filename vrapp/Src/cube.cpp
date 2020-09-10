@@ -66,8 +66,8 @@ void Cube::draw(const Scene& scene, Prog p) {
   obj.draw(scene, p);
 }
 
-bool Cube::intersect(Vec3f p0, Vec3f p1, Vec3f& intersection) {
-  Matrix4f worldFromObj = obj.modelPose.GetMatrix4() * scale;
+bool Cube::intersect(Vec3f p0, Vec3f p1, float ws, Vec3f& intersection) {
+  Matrix4f worldFromObj = obj.modelPose.GetMatrix4() * scale * Matrix4f::Scale(ws);
   Matrix4f objFromWorld = worldFromObj.Inverted();
   p0 = objFromWorld * p0;
   p1 = objFromWorld * p1;

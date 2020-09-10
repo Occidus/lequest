@@ -21,5 +21,5 @@ class Torus : public Shape {
 
   // bool intersect(Vec3f p0, Vec3f p1);
 
-  virtual bool intersect(Vec3f p0, Vec3f p1, Vec3f& intersection);
+  virtual bool intersect(Vec3f p0, Vec3f p1, float ws, Vec3f& intersection);
 };

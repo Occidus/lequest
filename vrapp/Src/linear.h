@@ -2245,6 +2245,11 @@ struct Pose {
   }
 };
 
+template <typename T>
+Vec3<T> operator*(const Pose<T> & p, const Vec3<T> & v) {
+  return p.Transform(v);
+}
+
 // make common typedefs...
 typedef Vec2<int> Vec2i;
 typedef Vec2<float> Vec2f;

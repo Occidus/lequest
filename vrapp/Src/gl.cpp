@@ -49,9 +49,11 @@ struct RendererImpl : public Renderer {
   void SetWindowSize(int w, int h) override;
   void SetCursorPos(Vec2d cursorPos) override;
   void ResetSim() override;
+  void RayInWorld(Vec3f& nIW3, Vec3f& fIW3) override;
   void RayInWorld(int w, int h, Vec3f& nIW3, Vec3f& fIW3) override;
   void Intersect(Vec3f nIW3, Vec3f fIW3) override;
   void Drag(Vec3f newPos) override;
+  void ReScale(float scale) override;
 
   Scene scene;
   Tetra dots;
@@ -79,6 +81,9 @@ struct RendererImpl : public Renderer {
 
   Shape* hitShape;
   Vec3f intObjLoc;
+
+  Cube left;
+  Cube right;
 
   int width;
   int height;
@@ -219,7 +224,7 @@ void RendererImpl::Init() {
   // objects init begin
   grid.begin(GL_LINES);
   grid.color(0.90f, 0.90f, 0.90f);
-  static const int gridsize = 17;  // vertical or horizontal size *odd*
+  static const int gridsize = 1501;//17;  // vertical or horizontal size *odd*
   static const float s = 0.25f;    // spacing of lines
   for (int i = 0; i < gridsize; i++) {
     float shift = (gridsize / 2) * -1 * s + i * s;
@@ -271,28 +276,24 @@ void RendererImpl::Init() {
   list.back()->obj.shiny = 15.0f;
   list.back()->obj.tex = wood;
 
-  auto left = new Cube;  // Left Hand
-  left->build(Matrix4f::Scale(0.05f));
-  list.push_back(left);
-  list.back()->obj.modelPose.t = Vec3f(0, -1, 0);
-  list.back()->obj.matDifCol = Vec3f(0.85f, 0.15f, 0.15f);
-  list.back()->obj.matSpcCol = Vec3f(0.95f, 0.05f, 0.05f);
-  list.back()->obj.shiny = 15.0f;
-  list.back()->obj.scale = false;
-
-  auto right = new Cube;  // Right Hand
-  right->build(Matrix4f::Scale(0.05f));
-  list.push_back(right);
-  list.back()->obj.modelPose.t = Vec3f(0, -1, 0);
-  list.back()->obj.matDifCol = Vec3f(0.15f, 0.15f, 0.85f);
-  list.back()->obj.matSpcCol = Vec3f(0.05f, 0.05f, 0.95f);
-  list.back()->obj.shiny = 15.0f;
-  list.back()->obj.scale = false;
-
   auto light = new Sphere;  // Light Sphere
   light->build(0.03125f);
   list.push_back(light);
   list.back()->obj.modelPose.t = Vec3f(0.0f, 1.5f, 0.0f);
+
+  left.build(Matrix4f::Scale(0.05f)); // Left Hand
+  left.obj.modelPose.t = Vec3f(0, -1, 0);
+  left.obj.matDifCol = Vec3f(0.85f, 0.15f, 0.15f);
+  left.obj.matSpcCol = Vec3f(0.95f, 0.05f, 0.05f);
+  left.obj.shiny = 15.0f;
+  left.obj.scale = false;
+
+  right.build(Matrix4f::Scale(0.05f)); // Right Hand
+  right.obj.modelPose.t = Vec3f(0, -1, 0);
+  right.obj.matDifCol = Vec3f(0.15f, 0.15f, 0.85f);
+  right.obj.matSpcCol = Vec3f(0.05f, 0.05f, 0.95f);
+  right.obj.shiny = 15.0f;
+  right.obj.scale = false;
 
   points.push_back(Vec3f(-1.0f, 0.0f, 1.0f));
   points.push_back(Vec3f(-1.0f, 1.0f, 1.0f));
@@ -319,6 +320,9 @@ void RendererImpl::Init() {
   glLineWidth(3);
 
   intPoint.build(0.015f, Vec3f(0.9, 0.0, 0.7));
+  intPoint.obj.scale = false;
+
+  ray.scale = false;
 }
 
 void RendererImpl::SetWindowSize(int w, int h) {
@@ -354,13 +358,22 @@ void RendererImpl::RayInWorld(int w, int h, Vec3f& nIW3, Vec3f& fIW3) {
   ray.end();
 }
 
+void RendererImpl::RayInWorld(Vec3f& nIW3, Vec3f& fIW3) {
+  ray.begin(GL_LINES);
+  ray.color(0.0f, 1.0f, 0.0f);
+  ray.position(nIW3.x, nIW3.y, nIW3.z);
+  ray.color(0.0f, 1.0f, 0.0f);
+  ray.position(fIW3.x, fIW3.y, fIW3.z);
+  ray.end();
+}
+
 void RendererImpl::Intersect(Vec3f nIW3, Vec3f fIW3) {
   Vec3f objIntLoc;
 
   float distance = (fIW3 - nIW3).Length();
 
   for (auto shape : list) {
-    if (shape->intersect(nIW3, fIW3, objIntLoc)) {
+    if (shape->intersect(nIW3, fIW3, worldScale, objIntLoc)) {
       if ((objIntLoc - nIW3).Length() < distance) {
         distance = (objIntLoc - nIW3).Length();
         intObjLoc = shape->obj.modelPose.t - objIntLoc;
@@ -388,6 +401,10 @@ void RendererImpl::Drag(Vec3f newPos) {
   intLoc = newPos;
 }
 
+void RendererImpl::ReScale(float scale) {
+  scene.worldScale = Matrix4f::Scale(scale);
+}
+
 void RendererImpl::Draw() {
   scene.camPose.SetValue(camPose);
   scene.camPos = scene.camPose.t;
@@ -410,11 +427,11 @@ void RendererImpl::Draw() {
   ray.draw(scene, program);
 
   if(drawLeft){
-    list[4]->obj.modelPose = leftPose;
-    list[4]->draw(scene, litProgram);
+    left.obj.modelPose = leftPose;
+    left.draw(scene, litProgram);
   } if(drawRight){
-    list[5]->obj.modelPose = rightPose;
-    list[5]->draw(scene, litProgram);
+    right.obj.modelPose = rightPose;
+    right.draw(scene, litProgram);
   }
 
   if (scene.camPose.t.y <= 0.0f) {
@@ -430,7 +447,7 @@ void RendererImpl::Draw() {
   }
 
   scene.lightPose.t = list[4]->obj.modelPose.t;
-  list[6]->draw(scene, program);
+  list[4]->draw(scene, program);
 
   hull.draw(scene, program);
   curve.draw(scene, program);

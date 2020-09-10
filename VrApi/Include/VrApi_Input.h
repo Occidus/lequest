@@ -30,7 +30,7 @@ extern "C" {
 /// ovrButton_Home, ovrButton_VolUp, ovrButtonVolDown and ovrButton_Back are system buttons that are
 /// never reported to applications. ovrButton_Back button has system-level handling for long
 /// presses, but application-level handling for short-presses. Since a short-press is determined by
-/// the time interval between down and up events, the ovrButton_Back flag is only set when the back
+/// the time interval between down and up events, the `_Back flag is only set when the back
 /// button comes up in less than the short-press time (0.25 seconds). The ovrButton_Back flag always
 /// signals a short press and will only remain set for a single frame.
 typedef enum ovrButton_ {
