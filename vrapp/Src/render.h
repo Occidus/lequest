@@ -15,6 +15,7 @@ struct Renderer {
   bool drawLeft = false;
   bool drawRight = false;
   bool drawCenterAxis = false;
+  bool drawParabola = false;
   r3::Posef leftPose;
   r3::Posef rightPose;
 
@@ -25,8 +26,10 @@ struct Renderer {
   virtual void ResetSim() = 0;
   virtual void RayInWorld(r3::Vec3f& nIW3, r3::Vec3f& fIW3) = 0;
   virtual void RayInWorld(int w, int h, r3::Vec3f& nIW3, r3::Vec3f& fIW3) = 0;
+  virtual bool BalisticProj(r3::Vec3f& pos, r3::Vec3f velo) = 0;
   virtual void Intersect(r3::Vec3f nIW3, r3::Vec3f fIW3) = 0;
   virtual void Drag(r3::Vec3f newPos) = 0;
   virtual void SetScale(float scale, r3::Vec3f scaleOriginInTracking) = 0;
+  virtual void TeleportInApp(r3::Vec3f newPos) = 0;
 };
 Renderer* CreateRenderer();

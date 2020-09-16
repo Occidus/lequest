@@ -1740,7 +1740,7 @@ void android_main(struct android_app* app) {
         }
         
 
-        //// Pointing
+        //// Trigger Pointing
 
         if (stateL.IndexTrigger >= 0.95) {
             Posef worldFromLc = appState.Renderer.rend->leftPose;
@@ -1762,23 +1762,22 @@ void android_main(struct android_app* app) {
             lTrHeld = 0;
         }
 
+        bool tpHit = false;
+        Vec3f position;
+        Vec3f rotation;
         if (stateR.IndexTrigger >= 0.95) {
             Posef worldFromRc = appState.Renderer.rend->rightPose;
-            Vec3f nIW3 = worldFromRc * Vec3f(0,0,0);
-            Vec3f fIW3 = worldFromRc * Vec3f(0,0,-100);
+            position = worldFromRc.t;
+            rotation = Vec3f(worldFromRc.r.x, worldFromRc.r.y, worldFromRc.r.z).Normalized()*3;
 
-            appState.Renderer.rend->RayInWorld(nIW3, fIW3);
-            if (rTrHeld == 0) {
-                appState.Renderer.rend->Intersect(nIW3, fIW3);
-            } else {
-                Vec3f i;
-
-                Linef line(nIW3, fIW3);
-                Planef plane(Vec3f(0, 1, 0), appState.Renderer.rend->intLoc.y);
-                plane.Intersect(line, i);
-                appState.Renderer.rend->Drag(i);
-            }
+            tpHit = appState.Renderer.rend->BalisticProj(position, rotation);
+            appState.Renderer.rend->drawParabola = true;
         } else {
+            if (tpHit) {
+                appState.Renderer.rend->TeleportInApp(position);
+                appState.Renderer.rend->drawParabola = false;
+                tpHit = false;
+            }
             rTrHeld = 0;
         }
 

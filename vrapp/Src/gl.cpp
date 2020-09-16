@@ -51,9 +51,11 @@ struct RendererImpl : public Renderer {
   void ResetSim() override;
   void RayInWorld(Vec3f& nIW3, Vec3f& fIW3) override;
   void RayInWorld(int w, int h, Vec3f& nIW3, Vec3f& fIW3) override;
+  bool BalisticProj(Vec3f& pos, Vec3f velo) override;
   void Intersect(Vec3f nIW3, Vec3f fIW3) override;
   void Drag(Vec3f newPos) override;
   void SetScale(float scale, Vec3f scaleOriginInTracking) override;
+  void TeleportInApp(Vec3f newPos) override;
 
   Scene scene;
   Tetra dots;
@@ -69,7 +71,7 @@ struct RendererImpl : public Renderer {
   std::vector<Shape*> list;
 
   std::vector<Vec3f> points;
-  Geom hull, curve, ray, centerAxis;
+  Geom hull, curve, ray, tele, centerAxis;
   Sphere intPoint;
 
   Shape* hitShape;
@@ -203,7 +205,7 @@ void RendererImpl::Init() {
   litTexProgram = Prog("LitTex");
   spotProgram = Prog("Spot");
   
-  ALOGV("cass");
+  ALOGV("lucas");
 
   check = load_image("check.png");
   brick = load_image("bricks.png");
@@ -370,6 +372,33 @@ void RendererImpl::RayInWorld(Vec3f& nIW3, Vec3f& fIW3) {
   ray.end();
 }
 
+bool RendererImpl::BalisticProj(Vec3f& pos, Vec3f velo) {
+  Linef line;
+  Planef groundPlane(Vec3f(0,1,0),0);
+  Vec3f interset;
+  float g = 9.81 * scene.trackingFromWorld.el(0,0);
+  pos = scene.trackingFromWorld.Inverted() * pos;
+  tele.begin(GL_LINES);
+  tele.color(0.25f, 0.0f, 1.0f);
+  tele.position(pos);
+  Vec3f lastPoint = pos;
+  for (int i=0;i<50;i++) {
+    pos + velo;
+    velo.y -= g;
+    line.SetValue(lastPoint, pos);
+    if (groundPlane.Intersect(line, interset)) {
+      pos = interset;
+      tele.position(pos);
+      tele.end();
+      return true;
+    }
+    tele.position(pos);
+    lastPoint = pos;
+  }
+  tele.end();
+  return false;
+}
+
 void RendererImpl::Intersect(Vec3f nIW3, Vec3f fIW3) {
   Vec3f objIntLoc;
 
@@ -421,6 +450,12 @@ void RendererImpl::SetScale(float scale, Vec3f scaleOriginInTracking) {
   scene.trackingFromWorld = transAdjust * tfw;
 }
 
+void RendererImpl::TeleportInApp(Vec3f newPos) {
+  Matrix4f trans;
+  trans.SetTranslate(newPos);
+  scene.trackingFromWorld = scene.trackingFromWorld * trans;
+}
+
 void RendererImpl::Draw() {
   scene.camPose.SetValue(camPose);
   scene.camPos = scene.camPose.t;
@@ -443,6 +478,7 @@ void RendererImpl::Draw() {
   scene.projMat = camFrustum;
 
   ray.draw(scene, program);
+  tele.draw(scene, program);
 
   if(drawLeft){
     left.obj.modelPose = leftPose;
