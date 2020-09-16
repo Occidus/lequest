@@ -79,7 +79,7 @@ void Geom::draw(const Scene& scene, Prog p) {
 
   Matrix4f modelMat;
   if (scale) {
-    modelMat = scene.worldScale * modelPose.GetMatrix4();
+    modelMat = scene.trackingFromWorld * modelPose.GetMatrix4();
   } else {
     modelMat = modelPose.GetMatrix4();
   }

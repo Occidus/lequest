@@ -53,18 +53,13 @@ struct RendererImpl : public Renderer {
   void RayInWorld(int w, int h, Vec3f& nIW3, Vec3f& fIW3) override;
   void Intersect(Vec3f nIW3, Vec3f fIW3) override;
   void Drag(Vec3f newPos) override;
-  void ReScale(float scale) override;
+  void SetScale(float scale, Vec3f scaleOriginInTracking) override;
 
   Scene scene;
   Tetra dots;
   GLuint defaultVab;
 
-  Prog program;
-  Prog litProgram;
-  Prog texProgram;
-  Prog coordProgram;
-  Prog litTexProgram;
-  Prog spotProgram;
+  Prog program, litProgram, texProgram, coordProgram, litTexProgram, spotProgram;
 
   GLuint check, brick, stone, wood;
 
@@ -74,24 +69,19 @@ struct RendererImpl : public Renderer {
   std::vector<Shape*> list;
 
   std::vector<Vec3f> points;
-  Geom hull;
-  Geom curve;
-  Geom ray;
+  Geom hull, curve, ray, centerAxis;
   Sphere intPoint;
 
   Shape* hitShape;
   Vec3f intObjLoc;
 
-  Cube left;
-  Cube right;
+  Cube left, right, head;
 
-  int width;
-  int height;
+  int width, height;
 
   Vec2d currPos;
 
-  Vec3f nearInWorld3;
-  Vec3f farInWorld3;
+  Vec3f nearInWorld3, farInWorld3, scaleOrigin;
 };
 
 Renderer* CreateRenderer() {
@@ -194,7 +184,7 @@ void RendererImpl::Init() {
   scene.lightPose.r = Quaternionf(Vec3f(1, 0, 0), ToRadians(-90.0f));
   scene.lightPose.t = Vec3f(0, 1, 0);
   scene.lightCol = Vec3f(1, 1, 1);
-  scene.worldScale = Matrix4f::Scale(2);
+  scene.trackingFromWorld = Matrix4f::Scale(2);
 
   GLint version_maj = 0;
   GLint version_min = 0;
@@ -295,6 +285,19 @@ void RendererImpl::Init() {
   right.obj.shiny = 15.0f;
   right.obj.scale = false;
 
+  head.build(Matrix4f::Scale(0.05f)); // Head
+  head.obj.modelPose.t = Vec3f(0, -1, 0);
+  head.obj.matDifCol = Vec3f(0.15f, 0.85f, 0.15f);
+  head.obj.matSpcCol = Vec3f(0.05f, 0.95f, 0.05f);
+  head.obj.shiny = 20.0f;
+  head.obj.scale = false;
+
+  centerAxis.begin(GL_LINES);
+  centerAxis.color(0.0f, 1.0f, 1.0f);
+  centerAxis.position(0, 0, 0);
+  centerAxis.position(0, 100, 0);
+  centerAxis.end();
+
   points.push_back(Vec3f(-1.0f, 0.0f, 1.0f));
   points.push_back(Vec3f(-1.0f, 1.0f, 1.0f));
   points.push_back(Vec3f(0.0f, 1.0f, 1.0f));
@@ -373,7 +376,7 @@ void RendererImpl::Intersect(Vec3f nIW3, Vec3f fIW3) {
   float distance = (fIW3 - nIW3).Length();
 
   for (auto shape : list) {
-    if (shape->intersect(nIW3, fIW3, worldScale, objIntLoc)) {
+    if (shape->intersect(nIW3, fIW3, 2, objIntLoc)) {
       if ((objIntLoc - nIW3).Length() < distance) {
         distance = (objIntLoc - nIW3).Length();
         intObjLoc = shape->obj.modelPose.t - objIntLoc;
@@ -401,13 +404,28 @@ void RendererImpl::Drag(Vec3f newPos) {
   intLoc = newPos;
 }
 
-void RendererImpl::ReScale(float scale) {
-  scene.worldScale = Matrix4f::Scale(scale);
+void RendererImpl::SetScale(float scale, Vec3f scaleOriginInTracking) {
+  //Posef scaleOriginal;
+  //scaleOriginal.t = scene.trackingFromWorld * Vec3f( headPose.t.x, 0, headPose.t.z);
+  float oldScale = scene.trackingFromWorld.el(0,0);
+  float adjScale = scale / oldScale;
+  if (adjScale == 1.0f) {
+    return;
+  }
+  Matrix4f worldFromTracking = scene.trackingFromWorld.Inverted();
+  Vec3f scaleOriginInWorld = worldFromTracking * scaleOriginInTracking;
+  Matrix4f adjScaleM = Matrix4f::Scale(adjScale);
+  Matrix4f tfw = adjScaleM * scene.trackingFromWorld;
+  Vec3f newScaleOriginInTracking = tfw * scaleOriginInWorld;
+  Matrix4f transAdjust = Matrix4f::Translate(scaleOriginInTracking - newScaleOriginInTracking);
+  scene.trackingFromWorld = transAdjust * tfw;
 }
 
 void RendererImpl::Draw() {
   scene.camPose.SetValue(camPose);
   scene.camPos = scene.camPose.t;
+
+  //head.obj.modelPose.t = Vec3f(headPose.t.x, 0, headPose.t.z);
 
   //ALOGV("camPos = (%f, %f, %f)", camPos.x, camPos.y, camPos.z);
   if (false) {
@@ -432,6 +450,8 @@ void RendererImpl::Draw() {
   } if(drawRight){
     right.obj.modelPose = rightPose;
     right.draw(scene, litProgram);
+  } if (drawCenterAxis) {
+    centerAxis.draw(scene, program);
   }
 
   if (scene.camPose.t.y <= 0.0f) {
@@ -451,6 +471,7 @@ void RendererImpl::Draw() {
 
   hull.draw(scene, program);
   curve.draw(scene, program);
+  //head.draw(scene, litProgram);
 
   dots.draw(scene, litProgram, iterate);
 }

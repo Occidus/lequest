@@ -33,6 +33,8 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include "linear.h"
 #include "learningvr.h"
 
+using namespace r3;
+
 #if !defined(EGL_OPENGL_ES3_BIT_KHR)
 #define EGL_OPENGL_ES3_BIT_KHR 0x0040
 #endif
@@ -80,12 +82,16 @@ static double GetTimeInSeconds() {
     return (now.tv_sec * 1e9 + now.tv_nsec) * 0.000000001;
 }
 
-const r3::Matrix4f& ToR3(const ovrMatrix4f & om) {
-    return *reinterpret_cast<const r3::Matrix4f*>(&om);
+const Matrix4f& ToR3(const ovrMatrix4f & om) {
+    return *reinterpret_cast<const Matrix4f*>(&om);
 }
 
-const r3::Posef& ToR3(const ovrPosef & op) {
-    return *reinterpret_cast<const r3::Posef*>(&op);
+const Posef& ToR3(const ovrPosef & op) {
+    return *reinterpret_cast<const Posef*>(&op);
+}
+
+const Vec3f& ToR3(const ovrVector3f & op) {
+    return *reinterpret_cast<const Vec3f*>(&op);
 }
 
 /*
@@ -1573,10 +1579,12 @@ void android_main(struct android_app* app) {
 
     int lTrHeld = 0;
     int rTrHeld = 0;
+    int buttonAHeld = false;
 
     float worldScale = 2.0;
-    float distance = 0;
-    float initDist = 0;
+    Vec3f headPos;
+    float distance = 1.0;
+    float initDist = 1.0;
 
     while (app->destroyRequested == 0) {
         // Read all pending events.
@@ -1651,6 +1659,7 @@ void android_main(struct android_app* app) {
         const ovrTracking2 tracking =
             vrapi_GetPredictedTracking2(appState.Ovr, predictedDisplayTime);
 
+        headPos = ToR3(tracking.HeadPose.Pose.Position);
         appState.DisplayTime = predictedDisplayTime;
 
         // Advance the simulation based on the elapsed time since start of loop till predicted
@@ -1713,41 +1722,39 @@ void android_main(struct android_app* app) {
             vrapi_GetCurrentInputState(appState.Ovr, appState.right, &stateR.Header);
         }
 
+        //// Scaling math
         if (stateL.GripTrigger >= 0.95 && stateR.GripTrigger >= 0.95) {
-            r3::Vec3f lPos = appState.Renderer.rend->leftPose.t;
-            r3::Vec3f rPos = appState.Renderer.rend->rightPose.t;
-            float dx = lPos.x - rPos.x;
-            float dy = lPos.y - rPos.y;
-            float dz = lPos.z - rPos.z;
-            if (initDist == 0) {
-                initDist = sqrt((dx*dx)+(dy*dy)+(dz*dz));
-            } else {
-                distance = sqrt((dx*dx)+(dy*dy)+(dz*dz));
+            const Vec3f& lPos = appState.Renderer.rend->leftPose.t;
+            const Vec3f& rPos = appState.Renderer.rend->rightPose.t;
+            float dist = (lPos - rPos).Length();
+            if (initDist == 1.0) {
+                initDist = dist;
             }
+            distance = dist;
+            Vec3f scaleOriginInTracking( headPos.x, 0, headPos.z);
+            appState.Renderer.rend->SetScale(worldScale * (distance/initDist), scaleOriginInTracking);
         } else {
-            if (initDist != 0 && distance != 0) {
-                worldScale = worldScale * (distance/initDist);
-                appState.Renderer.rend->worldScale = worldScale;
-            } 
-            initDist = 0;
-            distance = 0;
-        }if (initDist != 0 && distance != 0) {
-            appState.Renderer.rend->ReScale(worldScale * (distance/initDist));
-        } 
+            worldScale *= distance/initDist;
+            initDist = 1.0;
+            distance = 1.0;
+        }
+        
+
+        //// Pointing
 
         if (stateL.IndexTrigger >= 0.95) {
-            r3::Posef worldFromLc = appState.Renderer.rend->leftPose;
-            r3::Vec3f nIW3 = worldFromLc * r3::Vec3f(0,0,0);
-            r3::Vec3f fIW3 = worldFromLc * r3::Vec3f(0,0,-100);
+            Posef worldFromLc = appState.Renderer.rend->leftPose;
+            Vec3f nIW3 = worldFromLc * Vec3f(0,0,0);
+            Vec3f fIW3 = worldFromLc * Vec3f(0,0,-100);
 
             appState.Renderer.rend->RayInWorld(nIW3, fIW3);
             if (lTrHeld == 0) {
                 appState.Renderer.rend->Intersect(nIW3, fIW3);
             } else {
-                r3::Vec3f i;
+                Vec3f i;
 
-                r3::Linef line(nIW3, fIW3);
-                r3::Planef plane(r3::Vec3f(0, 1, 0), appState.Renderer.rend->intLoc.y);
+                Linef line(nIW3, fIW3);
+                Planef plane(Vec3f(0, 1, 0), appState.Renderer.rend->intLoc.y);
                 plane.Intersect(line, i);
                 appState.Renderer.rend->Drag(i);
             }
@@ -1756,23 +1763,34 @@ void android_main(struct android_app* app) {
         }
 
         if (stateR.IndexTrigger >= 0.95) {
-            r3::Posef worldFromRc = appState.Renderer.rend->rightPose;
-            r3::Vec3f nIW3 = worldFromRc * r3::Vec3f(0,0,0);
-            r3::Vec3f fIW3 = worldFromRc * r3::Vec3f(0,0,-100);
+            Posef worldFromRc = appState.Renderer.rend->rightPose;
+            Vec3f nIW3 = worldFromRc * Vec3f(0,0,0);
+            Vec3f fIW3 = worldFromRc * Vec3f(0,0,-100);
 
             appState.Renderer.rend->RayInWorld(nIW3, fIW3);
             if (rTrHeld == 0) {
                 appState.Renderer.rend->Intersect(nIW3, fIW3);
             } else {
-                r3::Vec3f i;
+                Vec3f i;
 
-                r3::Linef line(nIW3, fIW3);
-                r3::Planef plane(r3::Vec3f(0, 1, 0), appState.Renderer.rend->intLoc.y);
+                Linef line(nIW3, fIW3);
+                Planef plane(Vec3f(0, 1, 0), appState.Renderer.rend->intLoc.y);
                 plane.Intersect(line, i);
                 appState.Renderer.rend->Drag(i);
             }
         } else {
             rTrHeld = 0;
+        }
+
+        //// Buttons
+
+        if (stateR.Buttons & ovrTouch_A) {
+            if (!buttonAHeld) {
+               appState.Renderer.rend->drawCenterAxis = !appState.Renderer.rend->drawCenterAxis;
+                buttonAHeld = true; 
+            }
+        } else {
+            buttonAHeld = false;
         }
 
         const ovrLayerProjection2 worldLayer = ovrRenderer_RenderFrame(

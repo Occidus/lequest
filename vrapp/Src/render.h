@@ -12,10 +12,9 @@ struct Renderer {
   bool intersect = false;
   int iterate = 0;
 
-  float worldScale = 2.0;
-
   bool drawLeft = false;
   bool drawRight = false;
+  bool drawCenterAxis = false;
   r3::Posef leftPose;
   r3::Posef rightPose;
 
@@ -28,6 +27,6 @@ struct Renderer {
   virtual void RayInWorld(int w, int h, r3::Vec3f& nIW3, r3::Vec3f& fIW3) = 0;
   virtual void Intersect(r3::Vec3f nIW3, r3::Vec3f fIW3) = 0;
   virtual void Drag(r3::Vec3f newPos) = 0;
-  virtual void ReScale(float scale) = 0;
+  virtual void SetScale(float scale, r3::Vec3f scaleOriginInTracking) = 0;
 };
 Renderer* CreateRenderer();
