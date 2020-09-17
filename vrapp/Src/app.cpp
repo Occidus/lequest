@@ -1767,6 +1767,7 @@ void android_main(struct android_app* app) {
                     appState.Renderer.rend->Drag(i);
                 }
             }
+            lTrHeld += 1;
         } else {
             lTrHeld = 0;
         }
@@ -1786,7 +1787,7 @@ void android_main(struct android_app* app) {
                 fIW3 *= 100;
 
                 appState.Renderer.rend->RayInWorld(nIW3, fIW3);
-                if (lTrHeld == 0) {
+                if (rTrHeld == 0) {
                     appState.Renderer.rend->Intersect(nIW3, fIW3);
                 } else {
                     Vec3f i;
@@ -1795,8 +1796,10 @@ void android_main(struct android_app* app) {
                     Planef plane(Vec3f(0, 1, 0), appState.Renderer.rend->intLoc.y);
                     plane.Intersect(line, i);
                     appState.Renderer.rend->Drag(i);
+                    appState.Renderer.rend->intersect = !appState.Renderer.rend->intersect;
                 }
             }
+            rTrHeld += 1;
         } else {
             if (tpHit) {
                 appState.Renderer.rend->TeleportInApp(position);
