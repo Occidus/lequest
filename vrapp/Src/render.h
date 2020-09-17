@@ -12,10 +12,7 @@ struct Renderer {
   bool intersect = false;
   int iterate = 0;
 
-  bool drawLeft = false;
-  bool drawRight = false;
   bool drawCenterAxis = false;
-  bool drawParabola = false;
   r3::Posef leftPose;
   r3::Posef rightPose;
 

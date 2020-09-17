@@ -25,16 +25,18 @@ void Square::draw(const Scene& scene, Prog p) {
   obj.draw(scene, p);
 }
 
-bool Square::intersect(Vec3f p0, Vec3f p1, float ws, Vec3f& intersection) {
+bool Square::intersect(Vec3f p0, Vec3f p1, Vec3f& intersection) {
+  Matrix4f worldFromObj = obj.modelPose.GetMatrix4();
+  Matrix4f objFromWorld = worldFromObj.Inverted();
   Planef plane(Vec3f(0, 1, 0), 0.0f);
-  plane.Transform(obj.modelPose.GetMatrix4() * Matrix4f::Scale(ws));
-  Vec3f p0ips = p0 + obj.modelPose.t;
-  Vec3f p1ips = p1 + obj.modelPose.t;
+  plane.Transform(worldFromObj);
+  Vec3f p0ips = objFromWorld * p0;
+  Vec3f p1ips = objFromWorld * p1;
   Linef ray(p0ips, p1ips);
   bool hit = plane.Intersect(ray, intersection);
   Vec3f i = intersection;
   if (hit == true && i.x < sideLen / 2 && i.x > (sideLen / 2) * -1 && i.z < sideLen / 2 && i.z > (sideLen / 2) * -1) {
-    intersection -= obj.modelPose.t;
+    intersection = worldFromObj * intersection;
   } else {
     hit = false;
   }

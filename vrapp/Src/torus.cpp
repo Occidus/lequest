@@ -93,14 +93,14 @@ bool Torus::intersect(Vec3f p0, Vec3f p1) {
 }
 */
 
-bool Torus::intersect(Vec3f p0, Vec3f p1, float ws, Vec3f& intersection) {
+bool Torus::intersect(Vec3f p0, Vec3f p1, Vec3f& intersection) {
   bool out;
-  Matrix4f objFromWorld = obj.modelPose.GetMatrix4().Inverted() * Matrix4f::Scale(ws);
+  Matrix4f objFromWorld = obj.modelPose.GetMatrix4().Inverted();
   p0 = objFromWorld * p0;
   p1 = objFromWorld * p1;
   Vec3f l = (p1 - p0).Normalized();
-  double R = bigr * ws;
-  double r = littler * ws;
+  double R = bigr;
+  double r = littler;
   double g = Dot(l, l);
   double h = 2 * Dot(l, p0);
   double k = Dot(p0, p0) + (R * R) - (r * r);
@@ -184,20 +184,20 @@ bool Torus::intersect(Vec3f p0, Vec3f p1, float ws, Vec3f& intersection) {
 
   if (delta < 0) {
     intersection = p0 + l * z;
-    intersection = obj.modelPose.GetMatrix4() * Matrix4f::Scale(ws) * intersection;
+    intersection = obj.modelPose.GetMatrix4() * intersection;
     out = true;
   }
   if (delta > 0) {
     if (P < 0 && D < 0) {
       intersection = p0 + l * z;
-      intersection = obj.modelPose.GetMatrix4() * Matrix4f::Scale(ws) * intersection;
+      intersection = obj.modelPose.GetMatrix4() * intersection;
       out = true;
     } else {
       out = false;
     }
   }
   intersection = p0 + l * z;
-  intersection = obj.modelPose.GetMatrix4() * Matrix4f::Scale(ws) * intersection;
+  intersection = obj.modelPose.GetMatrix4() * intersection;
   if (delta == 0) {
     if (P < 0 && D < 0 && delta0 != 0) {
       out = true;

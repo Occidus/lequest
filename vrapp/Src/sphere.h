@@ -19,5 +19,5 @@ class Sphere : public Shape {
 
   virtual void draw(const Scene& scene, Prog p) override;
 
-  virtual bool intersect(Vec3f p0, Vec3f p1, float ws, Vec3f& intersection) override;
+  virtual bool intersect(Vec3f p0, Vec3f p1, Vec3f& intersection) override;
 };

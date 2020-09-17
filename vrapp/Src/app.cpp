@@ -1579,7 +1579,9 @@ void android_main(struct android_app* app) {
 
     int lTrHeld = 0;
     int rTrHeld = 0;
-    int buttonAHeld = false;
+    bool buttonAHeld = false;
+    bool buttonXHeld = false;
+    bool teleportMode = true;
 
     float worldScale = 2.0;
     Vec3f headPos;
@@ -1668,6 +1670,8 @@ void android_main(struct android_app* app) {
 
         // Render eye images and setup the primary layer using ovrTracking2.
 
+        //// Get controller input states and positions
+
         appState.left = ovrDeviceIdType_Invalid;
         appState.right = ovrDeviceIdType_Invalid;
 
@@ -1709,13 +1713,11 @@ void android_main(struct android_app* app) {
         ovrTracking remoteTrackingR;
         ovrInputStateTrackedRemote stateR;
         if (appState.left != ovrDeviceIdType_Invalid){
-            appState.Renderer.rend->drawLeft = true;
             vrapi_GetInputTrackingState(appState.Ovr, appState.left, appState.DisplayTime, &remoteTrackingL);
             appState.Renderer.rend->leftPose = ToR3(remoteTrackingL.HeadPose.Pose);
             stateL.Header.ControllerType = ovrControllerType_TrackedRemote;
             vrapi_GetCurrentInputState(appState.Ovr, appState.left, &stateL.Header);
         } if (appState.right != ovrDeviceIdType_Invalid){
-            appState.Renderer.rend->drawRight = true;
             vrapi_GetInputTrackingState(appState.Ovr, appState.right, appState.DisplayTime, &remoteTrackingR);
             appState.Renderer.rend->rightPose = ToR3(remoteTrackingR.HeadPose.Pose);
             stateR.Header.ControllerType = ovrControllerType_TrackedRemote;
@@ -1742,40 +1744,62 @@ void android_main(struct android_app* app) {
 
         //// Trigger Pointing
 
+        bool tpHit = false;
+        Vec3f position;
+        Vec3f rotation;
+
         if (stateL.IndexTrigger >= 0.95) {
             Posef worldFromLc = appState.Renderer.rend->leftPose;
             Vec3f nIW3 = worldFromLc * Vec3f(0,0,0);
             Vec3f fIW3 = worldFromLc * Vec3f(0,0,-100);
+            if (true) {
+                fIW3 *= 100;
 
-            appState.Renderer.rend->RayInWorld(nIW3, fIW3);
-            if (lTrHeld == 0) {
-                appState.Renderer.rend->Intersect(nIW3, fIW3);
-            } else {
-                Vec3f i;
+                appState.Renderer.rend->RayInWorld(nIW3, fIW3);
+                if (lTrHeld == 0) {
+                    appState.Renderer.rend->Intersect(nIW3, fIW3);
+                } else {
+                    Vec3f i;
 
-                Linef line(nIW3, fIW3);
-                Planef plane(Vec3f(0, 1, 0), appState.Renderer.rend->intLoc.y);
-                plane.Intersect(line, i);
-                appState.Renderer.rend->Drag(i);
+                    Linef line(nIW3, fIW3);
+                    Planef plane(Vec3f(0, 1, 0), appState.Renderer.rend->intLoc.y);
+                    plane.Intersect(line, i);
+                    appState.Renderer.rend->Drag(i);
+                }
             }
-        }else {
+        } else {
             lTrHeld = 0;
         }
 
-        bool tpHit = false;
-        Vec3f position;
-        Vec3f rotation;
+        
         if (stateR.IndexTrigger >= 0.95) {
             Posef worldFromRc = appState.Renderer.rend->rightPose;
-            position = worldFromRc.t;
-            rotation = Vec3f(worldFromRc.r.x, worldFromRc.r.y, worldFromRc.r.z).Normalized()*3;
+            Vec3f nIW3 = worldFromRc * Vec3f(0,0,0);
+            Vec3f fIW3 = worldFromRc * Vec3f(0,0,-100);
+            if (teleportMode){
+                position = nIW3;
+                fIW3 = (fIW3 / worldScale) / 10;
+                fIW3.y *= 1.5;
 
-            tpHit = appState.Renderer.rend->BalisticProj(position, rotation);
-            appState.Renderer.rend->drawParabola = true;
+                tpHit = appState.Renderer.rend->BalisticProj(position, fIW3);
+            } else {
+                fIW3 *= 100;
+
+                appState.Renderer.rend->RayInWorld(nIW3, fIW3);
+                if (lTrHeld == 0) {
+                    appState.Renderer.rend->Intersect(nIW3, fIW3);
+                } else {
+                    Vec3f i;
+
+                    Linef line(nIW3, fIW3);
+                    Planef plane(Vec3f(0, 1, 0), appState.Renderer.rend->intLoc.y);
+                    plane.Intersect(line, i);
+                    appState.Renderer.rend->Drag(i);
+                }
+            }
         } else {
             if (tpHit) {
                 appState.Renderer.rend->TeleportInApp(position);
-                appState.Renderer.rend->drawParabola = false;
                 tpHit = false;
             }
             rTrHeld = 0;
@@ -1785,12 +1809,15 @@ void android_main(struct android_app* app) {
 
         if (stateR.Buttons & ovrTouch_A) {
             if (!buttonAHeld) {
-               appState.Renderer.rend->drawCenterAxis = !appState.Renderer.rend->drawCenterAxis;
+                teleportMode = !teleportMode;
+                //appState.Renderer.rend->drawCenterAxis = !appState.Renderer.rend->drawCenterAxis;
                 buttonAHeld = true; 
             }
         } else {
             buttonAHeld = false;
         }
+
+        ////
 
         const ovrLayerProjection2 worldLayer = ovrRenderer_RenderFrame(
             &appState.Renderer,

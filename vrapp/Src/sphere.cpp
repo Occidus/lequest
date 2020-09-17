@@ -54,8 +54,8 @@ void Sphere::draw(const Scene& scene, Prog p) {
   obj.draw(scene, p);
 }
 
-bool Sphere::intersect(Vec3f p0, Vec3f p1, float ws, Vec3f& intersection) {
-  float rad = r*ws;
+bool Sphere::intersect(Vec3f p0, Vec3f p1, Vec3f& intersection) {
+  float rad = r;
   Vec3f rayDir = (p1 - p0).Normalized();
   Vec3f ce = obj.modelPose.t;
   Vec3f oc = p0 - ce;  // ray origin in object space

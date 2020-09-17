@@ -325,9 +325,6 @@ void RendererImpl::Init() {
   glLineWidth(3);
 
   intPoint.build(0.015f, Vec3f(0.9, 0.0, 0.7));
-  intPoint.obj.scale = false;
-
-  ray.scale = false;
 }
 
 void RendererImpl::SetWindowSize(int w, int h) {
@@ -357,43 +354,46 @@ void RendererImpl::RayInWorld(int w, int h, Vec3f& nIW3, Vec3f& fIW3) {
   fIW3 = Homogenize(scene.camPose.GetMatrix4() * farInCam);
   ray.begin(GL_LINES);
   ray.color(0.0f, 1.0f, 0.0f);
-  ray.position(nIW3.x, nIW3.y, nIW3.z);
+  ray.position(nIW3);
   ray.color(0.0f, 1.0f, 0.0f);
-  ray.position(fIW3.x, fIW3.y, fIW3.z);
+  ray.position(fIW3);
   ray.end();
 }
 
 void RendererImpl::RayInWorld(Vec3f& nIW3, Vec3f& fIW3) {
+  nIW3 = scene.trackingFromWorld.Inverted() * nIW3;
+  fIW3 = scene.trackingFromWorld.Inverted() * fIW3;
   ray.begin(GL_LINES);
   ray.color(0.0f, 1.0f, 0.0f);
-  ray.position(nIW3.x, nIW3.y, nIW3.z);
+  ray.position(nIW3);
   ray.color(0.0f, 1.0f, 0.0f);
-  ray.position(fIW3.x, fIW3.y, fIW3.z);
+  ray.position(fIW3);
   ray.end();
 }
 
 bool RendererImpl::BalisticProj(Vec3f& pos, Vec3f velo) {
-  Linef line;
-  Planef groundPlane(Vec3f(0,1,0),0);
-  Vec3f interset;
-  float g = 9.81 * scene.trackingFromWorld.el(0,0);
+  Vec3f lastPoint, intersectingPoint;
+  float g = 4.905 * scene.trackingFromWorld.el(0,0);
   pos = scene.trackingFromWorld.Inverted() * pos;
   tele.begin(GL_LINES);
-  tele.color(0.25f, 0.0f, 1.0f);
-  tele.position(pos);
-  Vec3f lastPoint = pos;
-  for (int i=0;i<50;i++) {
-    pos + velo;
-    velo.y -= g;
-    line.SetValue(lastPoint, pos);
-    if (groundPlane.Intersect(line, interset)) {
-      pos = interset;
-      tele.position(pos);
+  for (int i=0;i<250;i++) {
+    if (i%2==0){
+      tele.color(0.25f, 0.0f, 1.0f);
+    } else {
+      tele.color(1.0f, 0.0f, 0.25f);
+    }
+    lastPoint = pos;
+    pos += (velo * 0.01);
+    if (list[0]->intersect(pos, lastPoint, intersectingPoint)) {
+      tele.position(lastPoint);
+      tele.position(intersectingPoint);
       tele.end();
+      pos = intersectingPoint;
       return true;
     }
+    tele.position(lastPoint);
     tele.position(pos);
-    lastPoint = pos;
+    velo.y -= (g * 0.01);
   }
   tele.end();
   return false;
@@ -405,7 +405,7 @@ void RendererImpl::Intersect(Vec3f nIW3, Vec3f fIW3) {
   float distance = (fIW3 - nIW3).Length();
 
   for (auto shape : list) {
-    if (shape->intersect(nIW3, fIW3, 2, objIntLoc)) {
+    if (shape->intersect(nIW3, fIW3, objIntLoc)) {
       if ((objIntLoc - nIW3).Length() < distance) {
         distance = (objIntLoc - nIW3).Length();
         intObjLoc = shape->obj.modelPose.t - objIntLoc;
@@ -460,9 +460,8 @@ void RendererImpl::Draw() {
   scene.camPose.SetValue(camPose);
   scene.camPos = scene.camPose.t;
 
-  //head.obj.modelPose.t = Vec3f(headPose.t.x, 0, headPose.t.z);
-
   //ALOGV("camPos = (%f, %f, %f)", camPos.x, camPos.y, camPos.z);
+
   if (false) {
     float *f = &scene.camPose.r.x;
     ALOGV("camPose = (%f, %f, %f, %f) (%f, %f, %f)", f[0], f[1], f[2], f[3], f[4], f[5], f[6]);
@@ -479,14 +478,12 @@ void RendererImpl::Draw() {
 
   ray.draw(scene, program);
   tele.draw(scene, program);
+  left.obj.modelPose = leftPose;
+  left.draw(scene, litProgram);
+  right.obj.modelPose = rightPose;
+  right.draw(scene, litProgram);
 
-  if(drawLeft){
-    left.obj.modelPose = leftPose;
-    left.draw(scene, litProgram);
-  } if(drawRight){
-    right.obj.modelPose = rightPose;
-    right.draw(scene, litProgram);
-  } if (drawCenterAxis) {
+  if (drawCenterAxis) {
     centerAxis.draw(scene, program);
   }
 
