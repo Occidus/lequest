@@ -384,11 +384,17 @@ bool RendererImpl::BalisticProj(Vec3f& pos, Vec3f velo) {
     }
     lastPoint = pos;
     pos += (velo * 0.01);
-    if (list[0]->intersect(pos, lastPoint, intersectingPoint)) {
+    bool hit = list[0]->intersect(pos, lastPoint, intersectingPoint);
+    float fndist = (pos - lastPoint).Length();
+    float pndist = (intersectingPoint - lastPoint).Length();
+    float pfdist = (intersectingPoint - pos).Length();
+    if (hit && fndist > pndist && fndist > pfdist) {
       tele.position(lastPoint);
       tele.position(intersectingPoint);
       tele.end();
       pos = intersectingPoint;
+      intersect = true;
+      intPoint.obj.modelPose.t = pos;
       return true;
     }
     tele.position(lastPoint);
@@ -406,7 +412,10 @@ void RendererImpl::Intersect(Vec3f nIW3, Vec3f fIW3) {
 
   for (auto shape : list) {
     if (shape->intersect(nIW3, fIW3, objIntLoc)) {
-      if ((objIntLoc - nIW3).Length() < distance) {
+      float fndist = (fIW3 - nIW3).Length();
+      float pndist = (objIntLoc - nIW3).Length();
+      float pfdist = (objIntLoc - fIW3).Length();
+      if ((objIntLoc - nIW3).Length() < distance && fndist > pndist && fndist > pfdist) {
         distance = (objIntLoc - nIW3).Length();
         intObjLoc = shape->obj.modelPose.t - objIntLoc;
         intLoc = objIntLoc;
@@ -452,7 +461,9 @@ void RendererImpl::SetScale(float scale, Vec3f scaleOriginInTracking) {
 
 void RendererImpl::TeleportInApp(Vec3f newPos) {
   Matrix4f trans;
-  trans.SetTranslate(newPos);
+  Vec3f headPosInWorld = scene.trackingFromWorld.Inverted() * headPoseInTracking.t;
+  headPosInWorld.y = 0.0;
+  trans.SetTranslate(headPosInWorld - newPos);
   scene.trackingFromWorld = scene.trackingFromWorld * trans;
 }
 

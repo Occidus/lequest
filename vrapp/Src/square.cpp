@@ -29,7 +29,6 @@ bool Square::intersect(Vec3f p0, Vec3f p1, Vec3f& intersection) {
   Matrix4f worldFromObj = obj.modelPose.GetMatrix4();
   Matrix4f objFromWorld = worldFromObj.Inverted();
   Planef plane(Vec3f(0, 1, 0), 0.0f);
-  plane.Transform(worldFromObj);
   Vec3f p0ips = objFromWorld * p0;
   Vec3f p1ips = objFromWorld * p1;
   Linef ray(p0ips, p1ips);

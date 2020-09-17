@@ -1582,9 +1582,11 @@ void android_main(struct android_app* app) {
     bool buttonAHeld = false;
     bool buttonXHeld = false;
     bool teleportMode = true;
+    bool tpHit = false;
 
     float worldScale = 2.0;
     Vec3f headPos;
+    Vec3f position;
     float distance = 1.0;
     float initDist = 1.0;
 
@@ -1708,6 +1710,8 @@ void android_main(struct android_app* app) {
             }
         }
 
+        appState.Renderer.rend->headPoseInTracking = ToR3(tracking.HeadPose.Pose);
+
         ovrTracking remoteTrackingL;
         ovrInputStateTrackedRemote stateL;
         ovrTracking remoteTrackingR;
@@ -1744,8 +1748,6 @@ void android_main(struct android_app* app) {
 
         //// Trigger Pointing
 
-        bool tpHit = false;
-        Vec3f position;
         Vec3f rotation;
 
         if (stateL.IndexTrigger >= 0.95) {
@@ -1796,12 +1798,12 @@ void android_main(struct android_app* app) {
                     Planef plane(Vec3f(0, 1, 0), appState.Renderer.rend->intLoc.y);
                     plane.Intersect(line, i);
                     appState.Renderer.rend->Drag(i);
-                    appState.Renderer.rend->intersect = !appState.Renderer.rend->intersect;
                 }
             }
             rTrHeld += 1;
         } else {
             if (tpHit) {
+                //position = Vec3f(-position.x, position.y, -position.z);
                 appState.Renderer.rend->TeleportInApp(position);
                 tpHit = false;
             }

@@ -5,6 +5,7 @@
 struct Renderer {
   r3::Matrix4f camFrustum;
   r3::Matrix4f camPose;
+  r3::Posef headPoseInTracking;
   r3::Vec3f intLoc;
   r3::Vec2d prevPos;
   r3::Vec2d diffPos;
