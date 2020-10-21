@@ -1069,7 +1069,7 @@ ovrRenderer_Create(ovrRenderer* renderer, const ovrJava* java) {
     for (int eye = 0; eye < renderer->NumBuffers; eye++) {
         ovrFramebuffer_Create(
             &renderer->FrameBuffer[eye],
-            GL_RGBA8,
+            GL_SRGB8_ALPHA8,
             vrapi_GetSystemPropertyInt(java, VRAPI_SYS_PROP_SUGGESTED_EYE_TEXTURE_WIDTH),
             vrapi_GetSystemPropertyInt(java, VRAPI_SYS_PROP_SUGGESTED_EYE_TEXTURE_HEIGHT));
     }
@@ -1282,7 +1282,7 @@ static void ovrApp_HandleVrModeChanges(ovrApp* app) {
             ovrModeParms parms = vrapi_DefaultModeParms(&app->Java);
             // No need to reset the FLAG_FULLSCREEN window flag when using a View
             parms.Flags &= ~VRAPI_MODE_FLAG_RESET_WINDOW_FULLSCREEN;
-
+            parms.Flags |= VRAPI_MODE_FLAG_FRONT_BUFFER_SRGB;
             parms.Flags |= VRAPI_MODE_FLAG_NATIVE_WINDOW;
             parms.Display = (size_t)app->Egl.Display;
             parms.WindowSurface = (size_t)app->NativeWindow;
@@ -1565,6 +1565,12 @@ void android_main(struct android_app* app) {
     ovrEgl_CreateContext(&appState.Egl, nullptr);
 
     EglInitExtensions();
+
+#ifndef GL_FRAMEBUFFER_SRGB_EXT
+#define GL_FRAMEBUFFER_SRGB_EXT 0x8DB9
+#endif
+ 
+    glDisable(GL_FRAMEBUFFER_SRGB_EXT);
 
     appState.CpuLevel = CPU_LEVEL;
     appState.GpuLevel = GPU_LEVEL;
