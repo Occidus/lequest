@@ -727,6 +727,7 @@ struct ovrFramebuffer {
     int TextureSwapChainLength;
     int TextureSwapChainIndex;
     ovrTextureSwapChain* ColorTextureSwapChain;
+    GLuint* LinearColorBuffers;
     GLuint* DepthBuffers;
     GLuint* FrameBuffers;
 };
@@ -737,6 +738,7 @@ static void ovrFramebuffer_Clear(ovrFramebuffer* frameBuffer) {
     frameBuffer->TextureSwapChainLength = 0;
     frameBuffer->TextureSwapChainIndex = 0;
     frameBuffer->ColorTextureSwapChain = nullptr;
+    frameBuffer->LinearColorBuffers = nullptr;
     frameBuffer->DepthBuffers = nullptr;
     frameBuffer->FrameBuffers = nullptr;
 }
@@ -758,17 +760,38 @@ static bool ovrFramebuffer_Create(
         3);
     frameBuffer->TextureSwapChainLength =
         vrapi_GetTextureSwapChainLength(frameBuffer->ColorTextureSwapChain);
+    frameBuffer->LinearColorBuffers =
+        (GLuint*)malloc(frameBuffer->TextureSwapChainLength * sizeof(GLuint));
     frameBuffer->DepthBuffers =
         (GLuint*)malloc(frameBuffer->TextureSwapChainLength * sizeof(GLuint));
     frameBuffer->FrameBuffers =
         (GLuint*)malloc(frameBuffer->TextureSwapChainLength * sizeof(GLuint));
 
+#if !defined(GL_OES_texture_view)
+typedef void (GL_APIENTRY* PFNGLTEXTUREVIEWOES)(
+        GLuint texture,
+        GLenum target,
+        GLuint origtexture,
+        GLenum internalformat,
+        GLuint minlevel,
+        GLuint numlevels,
+        GLuint minlayer,
+        GLuint numlayers
+    );
+#endif
+
+    auto glTextureViewOES = reinterpret_cast<PFNGLTEXTUREVIEWOES>(eglGetProcAddress("glTextureViewOES"));
+
     for (int i = 0; i < frameBuffer->TextureSwapChainLength; i++) {
         // Create the color buffer texture.
-        const GLuint colorTexture =
+        const GLuint gammaColorTexture =
             vrapi_GetTextureSwapChainHandle(frameBuffer->ColorTextureSwapChain, i);
         GLenum colorTextureTarget = GL_TEXTURE_2D;
-        GL(glBindTexture(colorTextureTarget, colorTexture));
+        GLuint linearColorTexture;
+        GL(glGenTextures(1, &frameBuffer->LinearColorBuffers[i]));
+        linearColorTexture = frameBuffer->LinearColorBuffers[i];
+        GL(glTextureViewOES(linearColorTexture, colorTextureTarget, gammaColorTexture, GL_SRGB8_ALPHA8, 0, 1, 0, 1));
+        GL(glBindTexture(colorTextureTarget, linearColorTexture));
         GL(glTexParameteri(colorTextureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
         GL(glTexParameteri(colorTextureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
         GLfloat borderColor[] = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -792,8 +815,13 @@ static bool ovrFramebuffer_Create(
             GL_RENDERBUFFER,
             frameBuffer->DepthBuffers[i]));
         GL(glFramebufferTexture2D(
-            GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0));
+            GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, colorTextureTarget, linearColorTexture, 0));
         GL(GLenum renderFramebufferStatus = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER));
+        GLint colorspace = 0;
+        GL(glGetFramebufferAttachmentParameteriv(
+        GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING, &colorspace));
+        int frameBufferIsSrgb = (colorspace == GL_SRGB);
+        ALOGV("frameBufferIsSrgb = %d, colorspace = %d", frameBufferIsSrgb, colorspace);
         GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
         if (renderFramebufferStatus != GL_FRAMEBUFFER_COMPLETE) {
             ALOGE(
@@ -1069,7 +1097,7 @@ ovrRenderer_Create(ovrRenderer* renderer, const ovrJava* java) {
     for (int eye = 0; eye < renderer->NumBuffers; eye++) {
         ovrFramebuffer_Create(
             &renderer->FrameBuffer[eye],
-            GL_RGBA8,
+            GL_SRGB8_ALPHA8,
             vrapi_GetSystemPropertyInt(java, VRAPI_SYS_PROP_SUGGESTED_EYE_TEXTURE_WIDTH),
             vrapi_GetSystemPropertyInt(java, VRAPI_SYS_PROP_SUGGESTED_EYE_TEXTURE_HEIGHT));
     }
@@ -1282,7 +1310,7 @@ static void ovrApp_HandleVrModeChanges(ovrApp* app) {
             ovrModeParms parms = vrapi_DefaultModeParms(&app->Java);
             // No need to reset the FLAG_FULLSCREEN window flag when using a View
             parms.Flags &= ~VRAPI_MODE_FLAG_RESET_WINDOW_FULLSCREEN;
-
+            parms.Flags |= VRAPI_MODE_FLAG_FRONT_BUFFER_SRGB;
             parms.Flags |= VRAPI_MODE_FLAG_NATIVE_WINDOW;
             parms.Display = (size_t)app->Egl.Display;
             parms.WindowSurface = (size_t)app->NativeWindow;
@@ -1565,6 +1593,14 @@ void android_main(struct android_app* app) {
     ovrEgl_CreateContext(&appState.Egl, nullptr);
 
     EglInitExtensions();
+
+/*
+#ifndef GL_FRAMEBUFFER_SRGB_EXT
+#define GL_FRAMEBUFFER_SRGB_EXT 0x8DB9
+#endif
+
+    glDisable(GL_FRAMEBUFFER_SRGB_EXT);
+*/
 
     appState.CpuLevel = CPU_LEVEL;
     appState.GpuLevel = GPU_LEVEL;
