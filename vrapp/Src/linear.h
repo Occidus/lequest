@@ -2039,7 +2039,7 @@ class Plane {
     intersection = l0 + l * d;
     return true;
   }
-
+  
   void Transform(const Matrix4<T>& matrix) {
     Vec4<T> pl(planenormal.x, planenormal.y, planenormal.z, -planedistance);
     Matrix4<T> invtr = matrix.Inverted().Transposed();

@@ -1169,7 +1169,7 @@ static ovrLayerProjection2 ovrRenderer_RenderFrame(
         ovrFramebuffer* frameBuffer = &renderer->FrameBuffer[renderer->NumBuffers == 1 ? 0 : eye];
         layer.Textures[eye].ColorSwapChain = frameBuffer->ColorTextureSwapChain;
         layer.Textures[eye].SwapChainIndex = frameBuffer->TextureSwapChainIndex;
-        layer.Textures[eye].TexCoordsFromTanAngles =
+        layer.Textures[eye].TexCoordsFrom =
             ovrMatrix4f_TanAngleMatrixFromProjection(&updatedTracking.Eye[eye].ProjectionMatrix);
     }
     layer.Header.Flags |= VRAPI_FRAME_LAYER_FLAG_CHROMATIC_ABERRATION_CORRECTION;
@@ -1760,7 +1760,7 @@ void android_main(struct android_app* app) {
                 appState.Renderer.rend->RayInWorld(nIW3, fIW3);
                 if (lTrHeld == 0) {
                     appState.Renderer.rend->Intersect(nIW3, fIW3);
-                } else {
+                } else if (appState.Renderer.rend->intersect) {
                     Vec3f i;
 
                     Linef line(nIW3, fIW3);
@@ -1773,7 +1773,6 @@ void android_main(struct android_app* app) {
         } else {
             lTrHeld = 0;
         }
-
         
         if (stateR.IndexTrigger >= 0.95) {
             Posef worldFromRc = appState.Renderer.rend->rightPose;
@@ -1791,7 +1790,7 @@ void android_main(struct android_app* app) {
                 appState.Renderer.rend->RayInWorld(nIW3, fIW3);
                 if (rTrHeld == 0) {
                     appState.Renderer.rend->Intersect(nIW3, fIW3);
-                } else {
+                } else if (appState.Renderer.rend->intersect) {
                     Vec3f i;
 
                     Linef line(nIW3, fIW3);
@@ -1803,7 +1802,6 @@ void android_main(struct android_app* app) {
             rTrHeld += 1;
         } else {
             if (tpHit) {
-                //position = Vec3f(-position.x, position.y, -position.z);
                 appState.Renderer.rend->TeleportInApp(position);
                 tpHit = false;
             }

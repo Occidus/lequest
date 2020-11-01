@@ -373,10 +373,10 @@ void RendererImpl::RayInWorld(Vec3f& nIW3, Vec3f& fIW3) {
 
 bool RendererImpl::BalisticProj(Vec3f& pos, Vec3f velo) {
   Vec3f lastPoint, intersectingPoint;
-  float g = 4.905 * scene.trackingFromWorld.el(0,0);
+  float g = 9.81 / scene.trackingFromWorld.el(0,0);
   pos = scene.trackingFromWorld.Inverted() * pos;
   tele.begin(GL_LINES);
-  for (int i=0;i<250;i++) {
+  for (int i=0;i<500/scene.trackingFromWorld.el(0,0);i++) {
     if (i%2==0){
       tele.color(0.25f, 0.0f, 1.0f);
     } else {
@@ -515,7 +515,6 @@ void RendererImpl::Draw() {
 
   hull.draw(scene, program);
   curve.draw(scene, program);
-  //head.draw(scene, litProgram);
 
   dots.draw(scene, litProgram, iterate);
 }
