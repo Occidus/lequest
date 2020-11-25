@@ -20,15 +20,17 @@ int main(int argc, char **argv) {
 
     lVec4f vector(2,4,6,1);
 
-    printf("%.1f, %.1f, %.1f, %.1f\n", vector.v[0], vector.v[1], vector.v[2], vector.v[3]);
+    //printf("%.1f, %.1f, %.1f, %.1f\n", vector.v[0], vector.v[1], vector.v[2], vector.v[3]);
 
-    lMatrix4f mat(2.0f, 0.0f, 0.0f, 0.0f, 0.0f, 2.0f, 0.0f, 0.0f, 0.0f, 0.0f, 2.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+    lMatrix4f mat;
+    mat.SetScale(2);
 
-    //printMatrix(&mat.lM[0]);
+    lMatrix4f mat1;
+    mat1.SetTranslate(2,5,6);
 
-    lVec4f out = mat * vector;
+    const lMatrix4f out = mat * mat1;
 
-    printf("%.1f, %.1f, %.1f, %.1f\n", out.v[0], out.v[1], out.v[2], out.v[3]);
+    printMatrix(&out.lM[0]);
 
     return 0;
 }
