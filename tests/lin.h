@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+float lToRadians (float degrees) {
+    return degrees * (M_PI / 180.0f);
+}
+
 class lVec4f {
 public:
     union {
@@ -40,6 +44,8 @@ public:
 float Dot(lVec4f a, lVec4f b) {
     return (a.v[0] * b.v[0]) + (a.v[1] * b.v[1]) + (a.v[2] * b.v[2]) + (a.v[3] * b.v[3]);
 }
+
+enum ElAxis {AXIS_X, AXIS_Y, AXIS_Z};
 
 class lMatrix4f {
 public:
@@ -115,9 +121,9 @@ public:
         return lVec4f(el(0,i), el(1,i), el(2,i), el(3,i));
     }
 
-    static lMatrix4f Rotate(int axis, double angle) {
+    static lMatrix4f Rotate(ElAxis a, double angle) {
         lMatrix4f mat;
-        mat.SetRotation(axis, angle);
+        mat.SetRotation(a, angle);
         return mat;
     }
 
@@ -133,27 +139,36 @@ public:
         return mat;
     }
 
-    void SetRotation(int axis, double angle) { // Rotates about x, y, or z axis
-        if(axis==0){ // x-axis
-            el(1,1) = cos(angle);
-            el(1,2) = -sin(angle);
+    void SetRotation(ElAxis a, double angle) { // Rotates about x, y, or z axis
+        MakeIdentity();
+        switch (a) {
+            case AXIS_X: {
+                el(1,1) = cos(angle);
+                el(1,2) = -sin(angle);
 
-            el(2,1) = sin(angle);
-            el(2,2) = cos(angle);
-        }
-        if(axis==1){ // y-axis
-            el(0,0) = cos(angle);
-            el(0,2) = sin(angle);
+                el(2,1) = sin(angle);
+                el(2,2) = cos(angle);
+                break;
+            }
+            case AXIS_Y: { // y-axis
+                el(0,0) = cos(angle);
+                el(0,2) = sin(angle);
 
-            el(2,0) = -sin(angle);
-            el(2,2) = cos(angle);
-        } 
-        if(axis==2){ // z-axis
-            el(0,0) = cos(angle);
-            el(0,1) = -sin(angle);
+                el(2,0) = -sin(angle);
+                el(2,2) = cos(angle);
+                break;
+            } 
+            case AXIS_Z: { // z-axis
+                el(0,0) = cos(angle);
+                el(0,1) = -sin(angle);
 
-            el(1,0) = sin(angle);
-            el(1,1) = cos(angle);
+                el(1,0) = sin(angle);
+                el(1,1) = cos(angle);
+                break;
+            }
+            default: {
+                break;
+            }
         }
     }
 

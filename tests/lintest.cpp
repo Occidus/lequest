@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     mat0.SetScale(2);
 
     lMatrix4f mat1;
-    mat1.SetRotation(2, ToRadians(90.0));
+    mat1.SetRotation(AXIS_Z, lToRadians(90.0));
 
     const lVec4f out = mat1 * vector;
 
