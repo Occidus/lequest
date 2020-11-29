@@ -115,6 +115,12 @@ public:
         return lVec4f(el(0,i), el(1,i), el(2,i), el(3,i));
     }
 
+    static lMatrix4f Rotate(int axis, double angle) {
+        lMatrix4f mat;
+        mat.SetRotation(axis, angle);
+        return mat;
+    }
+
     static lMatrix4f Scale(float s) {
         lMatrix4f mat;
         mat.SetScale(s);
@@ -125,6 +131,30 @@ public:
         lMatrix4f mat;
         mat.SetTranslate(x,y,z);
         return mat;
+    }
+
+    void SetRotation(int axis, double angle) { // Rotates about x, y, or z axis
+        if(axis==0){ // x-axis
+            el(1,1) = cos(angle);
+            el(1,2) = -sin(angle);
+
+            el(2,1) = sin(angle);
+            el(2,2) = cos(angle);
+        }
+        if(axis==1){ // y-axis
+            el(0,0) = cos(angle);
+            el(0,2) = sin(angle);
+
+            el(2,0) = -sin(angle);
+            el(2,2) = cos(angle);
+        } 
+        if(axis==2){ // z-axis
+            el(0,0) = cos(angle);
+            el(0,1) = -sin(angle);
+
+            el(1,0) = sin(angle);
+            el(1,1) = cos(angle);
+        }
     }
 
     void SetScale(float s) {
@@ -146,15 +176,6 @@ public:
     float el(int row, int col) const {
         return lM[(row * 4) + col];
     }
-
-    /*lVec4f operator*(const lVec4f vec) {
-        float x = (el(0,0)*vec.v[0])+(el(1,0)*vec.v[0])+(el(2,0)*vec.v[0])+(el(3,0)*vec.v[0]);
-        float y = (el(0,1)*vec.v[1])+(el(1,1)*vec.v[1])+(el(2,1)*vec.v[1])+(el(3,1)*vec.v[1]);
-        float z = (el(0,2)*vec.v[2])+(el(1,2)*vec.v[2])+(el(2,2)*vec.v[2])+(el(3,2)*vec.v[2]);
-        float w = (el(0,3)*vec.v[3])+(el(1,3)*vec.v[3])+(el(2,3)*vec.v[3])+(el(3,3)*vec.v[3]);
-        return lVec4f(x,y,z,w);
-    }
-    */
 };
 
 lVec4f Mult(const lMatrix4f& m, const lVec4f& v) {
