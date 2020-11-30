@@ -13,11 +13,11 @@ else
 	GLFLAGS := -lGLESv2
 endif
 
-all: gl
+all: lintest
 
 H := $(wildcard *.h)
 
-SRC := glfw.cpp gl.cpp geom.cpp sphere.cpp cube.cpp torus.cpp prog.cpp square.cpp tetra.cpp
+SRC := lintest.cpp
 
 OBJ := $(patsubst %.cpp, %.o, $(SRC))
 

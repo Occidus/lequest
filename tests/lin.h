@@ -54,8 +54,7 @@ public:
 };
 
 float Dot(lVec4f a, lVec4f b) {
-  return (a.v[0] * b.v[0]) + (a.v[1] * b.v[1]) + (a.v[2] * b.v[2]) +
-         (a.v[3] * b.v[3]);
+  return (a.x * b.x) + (a.y * b.y) + (a.z * b.z) + (a.w * b.w);
 }
 
 enum ElAxis { AXIS_X, AXIS_Y, AXIS_Z };
@@ -209,47 +208,30 @@ public:
         MakeIdentity();
         lVec4f axis = a.Normalized();
         lMatrix4f toAxis, toOrigin, rotate;
-        float yRot = 0.0f;
         float xRot = 0.0f;
-
-        printf("%.3f, %.3f, %.3f\n\n", axis.x, axis.y, axis.z);
-
-        if(axis.x != 0) {
-            yRot = atan2(axis.z, axis.x);
-            printf("yRot: %.3f\n", lToDegrees(yRot));
-            rotate.SetRotation(AXIS_Y, -yRot);
-            toAxis = toAxis * rotate;
-            axis = rotate * axis;
-            printf("%.3f, %.3f, %.3f\n\n", axis.x, axis.y, axis.z);            
-        }
+        float zRot = 0.0f;
 
         if(axis.z != 0) {
             xRot = atan2(axis.z, axis.y);
-            printf("xRot: %.3f\n", lToDegrees(xRot));
             rotate.SetRotation(AXIS_X, -xRot);
-            toAxis = toAxis * rotate;
+            toAxis = toAxis * rotate.Rotate(AXIS_X, -xRot);
             axis = rotate * axis;
-            printf("%.3f, %.3f, %.3f\n\n\n", axis.x, axis.y, axis.z);
+        }
+        if(axis.y != 0) {
+            zRot = atan2(axis.y, axis.x);
+            toAxis = toAxis * rotate.Rotate(AXIS_Z, -zRot);
         }
 
-        rotate.SetRotation(AXIS_Y, angle);
-        toAxis = toAxis * rotate;
+        toAxis = toAxis * rotate.Rotate(AXIS_X, angle);
 
-        printf("inv-xRot: -%.3f\n", lToDegrees(xRot));
-        rotate.SetRotation(AXIS_X, xRot);
-        axis = rotate * axis;
-        printf("%.3f, %.3f, %.3f\n\n", axis.x, axis.y, axis.z);
-        toOrigin = toOrigin * rotate;
+        toOrigin = toOrigin * rotate.Rotate(AXIS_Z, zRot);
+        toOrigin = toOrigin * rotate.Rotate(AXIS_X, xRot);
 
-        printf("inv-yRot: -%.3f\n", lToDegrees(yRot));
-        rotate.SetRotation(AXIS_Y, yRot);
-        axis = rotate * axis;
-        printf("%.3f, %.3f, %.3f\n\n", axis.x, axis.y, axis.z);
-        toOrigin = toOrigin * rotate;
-
-        toAxis = toAxis * toOrigin;
-
-        *this = toAxis;
+        *this = toAxis * toOrigin;
+        el(0,1) = -el(0,1);
+        el(1,0) = -el(1,0);
+        el(1,2) = -el(1,2);
+        el(2,1) = -el(2,1);
     }
 
     void SetScale(float s) {

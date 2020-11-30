@@ -23,32 +23,30 @@ int main(int argc, char **argv) {
 
 
 
-    lVec4f vector(3,10,6);
-
-    vector.Normalize();
+    lVec4f vector(1,0,1);
+    Vec4f r3Vector(1,0,1,1);
 
     lMatrix4f mat0;
-    mat0.SetRotation(lVec4f(1,1,1), 45.0);
+    mat0.SetRotation(lVec4f(1,1,1), lToRadians(39.0));
 
-    lMatrix4f mat1;
-    mat1.SetTranslate(1,1,1);
+    const lMatrix4f out0 = mat0;
 
-    const lMatrix4f out = mat0;
+    printMatrix4(&out0.lM[0]);
 
-    printMatrix4(&out.lM[0]);
+    const lVec4f out = mat0 * vector;
+
+    printVec4(&out.x);
 
 
-    Quaternionf rotate(Vec3f(1,1,1), ToRadians(45.0f));
+    Quaternionf rotate(Vec3f(1,1,1), ToRadians(39.0f));
 
     const Matrix4f matl = rotate.GetMatrix4();
 
     printMatrix4(&matl.el(0,0));
 
-    //lMatrix4f multMat = mat1 * mat0;
+    const Vec4f out1 = rotate.GetMatrix4() * r3Vector;
 
-    //const lVec4f out = mat1 * vector;
-
-    //printVec4(&out.v[0]);
+    printVec4(&out1.x);
 
     return 0;
 }
