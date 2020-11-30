@@ -21,17 +21,27 @@ void printMatrix4(const float* m) {
 
 int main(int argc, char **argv) {
 
-    lVec4f vector(2,4,6);
+
+
+    lVec4f vector(3,10,6);
+
+    vector.Normalize();
 
     lMatrix4f mat0;
-    mat0.SetScale(2);
+    mat0.SetRotation(lVec4f(1,1,1), 45.0);
 
     lMatrix4f mat1;
-    mat1.SetRotation(AXIS_Z, lToRadians(90.0));
+    mat1.SetTranslate(1,1,1);
 
-    const lVec4f out = mat1 * vector;
+    const lMatrix4f out = mat0;
 
-    printVec4(&out.v[0]);
+    printMatrix4(&out.lM[0]);
+
+    //lMatrix4f multMat = mat1 * mat0;
+
+    //const lVec4f out = mat1 * vector;
+
+    //printVec4(&out.v[0]);
 
     return 0;
 }

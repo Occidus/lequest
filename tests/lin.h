@@ -8,6 +8,10 @@ float lToRadians (float degrees) {
     return degrees * (M_PI / 180.0f);
 }
 
+float lToDegrees (float radians) {
+    return radians * (180.0f / M_PI);
+}
+
 class lVec4f {
 public:
     union {
@@ -39,6 +43,18 @@ public:
         v[3] = d;
     }
 
+    void Normalize() {
+        float l = sqrt((x*x)+(y*y)+(z*z));
+        x /= l;
+        y /= l;
+        z /= l;
+    }
+
+    lVec4f Normalized() {
+        float l = sqrt((x*x)+(y*y)+(z*z));
+        return lVec4f((x/l), (y/l), (z/l));
+    }
+
 };
 
 float Dot(lVec4f a, lVec4f b) {
@@ -46,6 +62,20 @@ float Dot(lVec4f a, lVec4f b) {
 }
 
 enum ElAxis {AXIS_X, AXIS_Y, AXIS_Z};
+
+class lMatrix4f;
+
+lVec4f Mult(const lMatrix4f& m, const lVec4f& v);
+
+lVec4f operator*(const lMatrix4f& m, const lVec4f& v);
+
+lVec4f Mult(const lVec4f& v, const lMatrix4f& m);
+
+lVec4f operator*(const lVec4f& v, const lMatrix4f& m);
+
+lMatrix4f Mult(const lMatrix4f& m0, const lMatrix4f& m1);
+
+lMatrix4f operator*(const lMatrix4f& m0, const lMatrix4f& m1);
 
 class lMatrix4f {
 public:
@@ -127,6 +157,12 @@ public:
         return mat;
     }
 
+    static lMatrix4f Rotate(lVec4f a, double angle) {
+        lMatrix4f mat;
+        mat.SetRotation(a, angle);
+        return mat;
+    }
+
     static lMatrix4f Scale(float s) {
         lMatrix4f mat;
         mat.SetScale(s);
@@ -172,6 +208,60 @@ public:
         }
     }
 
+    void SetRotation(lVec4f a, double angle) { // Rotates about any abitrary axis
+        MakeIdentity();
+        lVec4f axis = a.Normalized();
+        lMatrix4f toAxis, toOrigin, rotate;
+        float yRot = 0.0f;
+        float xRot = 0.0f;
+
+        printf("%.3f, %.3f, %.3f\n\n", axis.x, axis.y, axis.z);
+
+        if(axis.x != 0) {
+            yRot = atan2(axis.x, axis.z);
+            printf("yRot: %.3f\n", lToDegrees(yRot));
+            rotate.SetRotation(AXIS_Y, -yRot);
+            toAxis = toAxis * rotate;
+            axis = rotate * axis;
+            printf("%.3f, %.3f, %.3f\n\n", axis.x, axis.y, axis.z);            
+        }
+
+        if(axis.z != 0) {
+            xRot = atan2(axis.z, axis.y);
+            printf("xRot: %.3f\n", lToDegrees(xRot));
+            rotate.SetRotation(AXIS_X, -xRot);
+            toAxis = toAxis * rotate;
+            axis = rotate * axis;
+            printf("%.3f, %.3f, %.3f\n\n\n", axis.x, axis.y, axis.z);
+        }
+
+        rotate.SetRotation(AXIS_Y, angle);
+        toAxis = toAxis * rotate;
+
+        if(xRot != 0.0f) {
+            printf("inv-xRot: -%.3f\n", lToDegrees(xRot));
+            rotate.SetRotation(AXIS_X, xRot);
+            axis = rotate * axis;
+            printf("%.3f, %.3f, %.3f\n\n", axis.x, axis.y, axis.z);
+            toOrigin = toOrigin * rotate;
+        }
+
+        if(yRot != 0.0f) {
+            printf("inv-yRot: -%.3f\n", lToDegrees(yRot));
+            rotate.SetRotation(AXIS_Y, yRot);
+            axis = rotate * axis;
+            printf("%.3f, %.3f, %.3f\n\n", axis.x, axis.y, axis.z);
+            toOrigin = toOrigin * rotate;
+        }
+
+        toAxis = toAxis * toOrigin;
+
+        Row(0, toAxis.Row(0));
+        Row(1, toAxis.Row(1));
+        Row(2, toAxis.Row(2));
+        Row(3, toAxis.Row(3));
+    }
+
     void SetScale(float s) {
         el(0,0) = s;
         el(1,1) = s;
@@ -197,7 +287,7 @@ lVec4f Mult(const lMatrix4f& m, const lVec4f& v) {
     return lVec4f(Dot(m.Row(0), v), Dot(m.Row(1), v), Dot(m.Row(2), v), Dot(m.Row(3), v));
 }
 
-lVec4f operator*(const lMatrix4f& m, const lVec4f& v){
+lVec4f operator*(const lMatrix4f& m, const lVec4f& v) {
     return Mult(m,v);
 }
 
@@ -205,7 +295,7 @@ lVec4f Mult(const lVec4f& v, const lMatrix4f& m) {
     return lVec4f(Dot(m.Col(0), v), Dot(m.Col(1), v), Dot(m.Col(2), v), Dot(m.Col(3), v));
 }
 
-lVec4f operator*(const lVec4f& v, const lMatrix4f& m){
+lVec4f operator*(const lVec4f& v, const lMatrix4f& m) {
     return Mult(v,m);
 }
 
