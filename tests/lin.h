@@ -215,7 +215,7 @@ public:
         printf("%.3f, %.3f, %.3f\n\n", axis.x, axis.y, axis.z);
 
         if(axis.x != 0) {
-            yRot = atan2(axis.x, axis.z);
+            yRot = atan2(axis.z, axis.x);
             printf("yRot: %.3f\n", lToDegrees(yRot));
             rotate.SetRotation(AXIS_Y, -yRot);
             toAxis = toAxis * rotate;
@@ -235,28 +235,21 @@ public:
         rotate.SetRotation(AXIS_Y, angle);
         toAxis = toAxis * rotate;
 
-        if(xRot != 0.0f) {
-            printf("inv-xRot: -%.3f\n", lToDegrees(xRot));
-            rotate.SetRotation(AXIS_X, xRot);
-            axis = rotate * axis;
-            printf("%.3f, %.3f, %.3f\n\n", axis.x, axis.y, axis.z);
-            toOrigin = toOrigin * rotate;
-        }
+        printf("inv-xRot: -%.3f\n", lToDegrees(xRot));
+        rotate.SetRotation(AXIS_X, xRot);
+        axis = rotate * axis;
+        printf("%.3f, %.3f, %.3f\n\n", axis.x, axis.y, axis.z);
+        toOrigin = toOrigin * rotate;
 
-        if(yRot != 0.0f) {
-            printf("inv-yRot: -%.3f\n", lToDegrees(yRot));
-            rotate.SetRotation(AXIS_Y, yRot);
-            axis = rotate * axis;
-            printf("%.3f, %.3f, %.3f\n\n", axis.x, axis.y, axis.z);
-            toOrigin = toOrigin * rotate;
-        }
+        printf("inv-yRot: -%.3f\n", lToDegrees(yRot));
+        rotate.SetRotation(AXIS_Y, yRot);
+        axis = rotate * axis;
+        printf("%.3f, %.3f, %.3f\n\n", axis.x, axis.y, axis.z);
+        toOrigin = toOrigin * rotate;
 
         toAxis = toAxis * toOrigin;
 
-        Row(0, toAxis.Row(0));
-        Row(1, toAxis.Row(1));
-        Row(2, toAxis.Row(2));
-        Row(3, toAxis.Row(3));
+        *this = toAxis;
     }
 
     void SetScale(float s) {

@@ -37,6 +37,13 @@ int main(int argc, char **argv) {
 
     printMatrix4(&out.lM[0]);
 
+
+    Quaternionf rotate(Vec3f(1,1,1), ToRadians(45.0f));
+
+    const Matrix4f matl = rotate.GetMatrix4();
+
+    printMatrix4(&matl.el(0,0));
+
     //lMatrix4f multMat = mat1 * mat0;
 
     //const lVec4f out = mat1 * vector;
