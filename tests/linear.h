@@ -1302,10 +1302,14 @@ public:
 
   // dst = M * src
   void MultMatrixVec(const Vec4<T> &src, Vec4<T> &dst) const {
-    dst.x = (src.x * el(0, 0) + src.y * el(0, 1) + src.z * el(0, 2) + src.w * el(0, 3));
-    dst.y = (src.x * el(1, 0) + src.y * el(1, 1) + src.z * el(1, 2) + src.w * el(1, 3));
-    dst.z = (src.x * el(2, 0) + src.y * el(2, 1) + src.z * el(2, 2) + src.w * el(2, 3));
-    dst.w = (src.x * el(3, 0) + src.y * el(3, 1) + src.z * el(3, 2) + src.w * el(3, 3));
+    dst.x = (src.x * el(0, 0) + src.y * el(0, 1) + src.z * el(0, 2) +
+             src.w * el(0, 3));
+    dst.y = (src.x * el(1, 0) + src.y * el(1, 1) + src.z * el(1, 2) +
+             src.w * el(1, 3));
+    dst.z = (src.x * el(2, 0) + src.y * el(2, 1) + src.z * el(2, 2) +
+             src.w * el(2, 3));
+    dst.w = (src.x * el(3, 0) + src.y * el(3, 1) + src.z * el(3, 2) +
+             src.w * el(3, 3));
   }
 
   void MultMatrixVec(Vec4<T> &src_and_dst) const {
