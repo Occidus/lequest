@@ -174,7 +174,7 @@ public:
     void SetRotation(ElAxis a, double angle) { // Rotates about x, y, or z axis
         MakeIdentity();
         switch (a) {
-            case AXIS_X: {
+            case AXIS_X: { // x-axis
                 el(1,1) = cos(angle);
                 el(1,2) = -sin(angle);
 
@@ -206,32 +206,25 @@ public:
 
     void SetRotation(lVec4f a, double angle) { // Rotates about any abitrary axis
         MakeIdentity();
-        lVec4f axis = a.Normalized();
-        lMatrix4f toAxis, toOrigin, rotate;
+        a.Normalize();
+        lMatrix4f toXyPlane, fromXyPlane, toXAxis, fromXAxis;
         float xRot = 0.0f;
         float zRot = 0.0f;
 
-        if(axis.z != 0) {
-            xRot = atan2(axis.z, axis.y);
-            rotate.SetRotation(AXIS_X, -xRot);
-            toAxis = toAxis * rotate.Rotate(AXIS_X, -xRot);
-            axis = rotate * axis;
+        if(a.z != 0) {
+            xRot = atan2(a.z, a.y);
+            printf("xRot = %.2f\n", lToDegrees(xRot));
+            toXyPlane = lMatrix4f::Rotate(AXIS_X, -xRot);
+            fromXyPlane = lMatrix4f::Rotate(AXIS_X, xRot);
         }
-        if(axis.y != 0) {
-            zRot = atan2(axis.y, axis.x);
-            toAxis = toAxis * rotate.Rotate(AXIS_Z, -zRot);
+        if(a.y != 0) {
+            zRot = atan2(sqrt(1.0f - a.x * a.x), a.x);
+            printf("zRot = %.2f\n", lToDegrees(zRot));
+            toXAxis = lMatrix4f::Rotate(AXIS_Z, -zRot);
+            fromXAxis = lMatrix4f::Rotate(AXIS_Z, zRot);
         }
 
-        toAxis = toAxis * rotate.Rotate(AXIS_X, angle);
-
-        toOrigin = toOrigin * rotate.Rotate(AXIS_Z, zRot);
-        toOrigin = toOrigin * rotate.Rotate(AXIS_X, xRot);
-
-        *this = toAxis * toOrigin;
-        el(0,1) = -el(0,1);
-        el(1,0) = -el(1,0);
-        el(1,2) = -el(1,2);
-        el(2,1) = -el(2,1);
+        *this = fromXyPlane * fromXAxis * lMatrix4f::Rotate(AXIS_X, angle) * toXAxis * toXyPlane;
     }
 
     void SetScale(float s) {
