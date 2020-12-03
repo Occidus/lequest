@@ -27,29 +27,29 @@ Vec4f ToR3(const lVec4f &lvec) {
 int main(int argc, char **argv) {
 
   lVec4f vector(0, 1, 0);
-  lVec4f axis(0, .5, 0.5);
+  lVec4f axis(0, .75, 0.5);
   float angleDeg = 39;
 
   lMatrix4f mat0;
   mat0.SetRotation(axis, lToRadians(angleDeg));
 
-  printMatrix4(&mat0.lM[0]);
+  lMatrix4f mat01 = mat0.Inverted();
 
-  const lVec4f out = mat0 * vector;
+  const lMatrix4f out = mat0 * mat01;
 
-  printVec4(&out.x);
+  //printMatrix4(&mat0.lM[0]);
+
+  //printMatrix4(&mat01.lM[0]);
+
+  printMatrix4(&mat01.lM[0]);
 
   Quaternionf rotate(Homogenize(ToR3(axis)), ToRadians(angleDeg));
 
-  Matrix4f mat1 = rotate.GetMatrix4().Transposed();
+  Matrix4f mat1 = rotate.GetMatrix4().Inverted();
 
-  printMatrix4(&mat1.el(0, 0));
+  const Matrix4f out1 = mat1;
 
-  mat1 = mat1.Transposed();
-
-  const Vec4f out1 = mat1 * ToR3(vector);
-
-  printVec4(&out1.x);
+  printMatrix4(&out1.el(0,0));
 
   return 0;
 }

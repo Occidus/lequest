@@ -71,6 +71,18 @@ lMatrix4f Mult(const lMatrix4f &m0, const lMatrix4f &m1);
 
 lMatrix4f operator*(const lMatrix4f &m0, const lMatrix4f &m1);
 
+lVec4f Mult(const lVec4f &v, const float &f);
+lVec4f Divi(const lVec4f &v, const float &f);
+lVec4f add(const lVec4f &v0, const lVec4f &v1);
+lVec4f min(const lVec4f &v0, const lVec4f &v1);
+
+lVec4f operator*(const lVec4f &v, const float &f);
+lVec4f operator/(const lVec4f &v, const float &f);
+lVec4f operator+(const lVec4f &v0, const lVec4f &v1);
+lVec4f operator-(const lVec4f &v0, const lVec4f &v1);
+
+void printOp(float *m0, float *m1);
+
 class lMatrix4f {
 public:
   float lM[16];
@@ -146,6 +158,12 @@ public:
     return lVec4f(el(0, i), el(1, i), el(2, i), el(3, i));
   }
 
+  lMatrix4f Inverted() {
+    lMatrix4f mat = *this;
+    mat.Invert();
+    return mat;
+  }
+
   static lMatrix4f Rotate(ElAxis a, double angle) {
     lMatrix4f mat;
     mat.SetRotation(a, angle);
@@ -168,6 +186,34 @@ public:
     lMatrix4f mat;
     mat.SetTranslate(x, y, z);
     return mat;
+  }
+
+  void Invert() {
+    lMatrix4f out;
+    //printOp(&el(0,0), &out.el(0,0));
+    for(int r=0;r<4;r++) {
+      if(Row(r).v[r]!=1.0f) { // Sets diagonal to 1.0f
+        out.Row(r, out.Row(r) / Row(r).v[r]);
+        Row(r, Row(r) / Row(r).v[r]);
+        //printOp(&el(0,0), &out.el(0,0));
+      }
+      for(int i=r+1;i<4;i++) { // Works numbers below to 0.0f
+        out.Row(i, (out.Row(i)-(Row(r)*Row(i).v[r])));
+        Row(i, (Row(i)-(Row(r)*Row(i).v[r])));
+        //printOp(&el(0,0), &out.el(0,0));
+      }
+    }
+    for(int r=3;r>=0;r--) {
+      lVec4f row = Row(r);
+      for(int i=r-1;i>=0;i--) { // Works numbers above to 0.0f
+        out.Row(i, (out.Row(i)-(Row(r)*Row(i).v[r])));
+        Row(i, (Row(i)-(Row(r)*Row(i).v[r])));
+        //printOp(&el(0,0), &out.el(0,0));
+      }
+    }
+
+    printOp(&el(0,0), &out.el(0,0));
+    *this = out;
   }
 
   void SetRotation(ElAxis a, double angle) { // Rotates about x, y, or z axis
@@ -212,13 +258,11 @@ public:
 
     if (a.z != 0) {
       xRot = atan2(a.z, a.y);
-      printf("xRot = %.2f\n", lToDegrees(xRot));
       toXyPlane = lMatrix4f::Rotate(AXIS_X, -xRot);
       fromXyPlane = lMatrix4f::Rotate(AXIS_X, xRot);
     }
     if (a.y != 0) {
       zRot = atan2(sqrt(1.0f - a.x * a.x), a.x);
-      printf("zRot = %.2f\n", lToDegrees(zRot));
       toXAxis = lMatrix4f::Rotate(AXIS_Z, -zRot);
       fromXAxis = lMatrix4f::Rotate(AXIS_Z, zRot);
     }
@@ -265,4 +309,22 @@ lMatrix4f Mult(const lMatrix4f &m0, const lMatrix4f &m1) {
 
 lMatrix4f operator*(const lMatrix4f &m0, const lMatrix4f &m1) {
   return Mult(m0, m1);
+}
+
+lVec4f Mult(const lVec4f &v, const float &f) { return lVec4f(v.x*f, v.y*f, v.z*f, v.w*f); }
+lVec4f Divi(const lVec4f &v, const float &f) { return lVec4f(v.x/f, v.y/f, v.z/f, v.w/f); }
+lVec4f add(const lVec4f &v0, const lVec4f &v1) { return lVec4f(v0.x+v1.x, v0.y+v1.y, v0.z+v1.z, v0.w+v1.w); }
+lVec4f min(const lVec4f &v0, const lVec4f &v1) { return lVec4f(v0.x-v1.x, v0.y-v1.y, v0.z-v1.z, v0.w-v1.w); }
+
+lVec4f operator*(const lVec4f &v, const float &f) { return Mult(v, f); }
+lVec4f operator/(const lVec4f &v, const float &f) { return Divi(v, f); }
+lVec4f operator+(const lVec4f &v0, const lVec4f &v1) { return add(v0, v1); }
+lVec4f operator-(const lVec4f &v0, const lVec4f &v1) { return min(v0, v1); }
+
+void printOp(float *m0, float *m1) {
+  printf("%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, %.3f, %.3f\n%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, %.3f, %.3f\n%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, %.3f, %.3f\n%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, %.3f, %.3f\n\n",
+    m0[0], m0[1], m0[2], m0[3],      m1[0], m1[1], m1[2], m1[3],
+    m0[4], m0[5], m0[6], m0[7],      m1[4], m1[5], m1[6], m1[7],
+    m0[8], m0[9], m0[10], m0[11],    m1[8], m1[9], m1[10], m1[11],
+    m0[12], m0[13], m0[14], m0[15],  m1[12], m1[13], m1[14], m1[15]);
 }
