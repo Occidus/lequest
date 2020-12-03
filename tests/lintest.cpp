@@ -27,7 +27,7 @@ Vec4f ToR3(const lVec4f &lvec) {
 int main(int argc, char **argv) {
 
   lVec4f vector(0, 1, 0);
-  lVec4f axis(0, .75, 0.5);
+  lVec4f axis(0, .5, 0.5);
   float angleDeg = 39;
 
   lMatrix4f mat0;

@@ -190,25 +190,28 @@ public:
 
   void Invert() {
     lMatrix4f out;
-    //printOp(&el(0,0), &out.el(0,0));
+    printOp(&el(0,0), &out.el(0,0));
     for(int r=0;r<4;r++) {
       if(Row(r).v[r]!=1.0f) { // Sets diagonal to 1.0f
+        printf("R[%i] / %f\n\n", r, Row(r).v[r]);
         out.Row(r, out.Row(r) / Row(r).v[r]);
         Row(r, Row(r) / Row(r).v[r]);
-        //printOp(&el(0,0), &out.el(0,0));
+        printOp(&el(0,0), &out.el(0,0));
       }
       for(int i=r+1;i<4;i++) { // Works numbers below to 0.0f
-        out.Row(i, (out.Row(i)-(Row(r)*Row(i).v[r])));
+        printf("R[%i] - %fR[%i]\n\n", i, Row(i).v[r], r);
+        out.Row(i, (out.Row(i)-(out.Row(r)*Row(i).v[r])));
         Row(i, (Row(i)-(Row(r)*Row(i).v[r])));
-        //printOp(&el(0,0), &out.el(0,0));
+        printOp(&el(0,0), &out.el(0,0));
       }
     }
-    for(int r=3;r>=0;r--) {
-      lVec4f row = Row(r);
+    for(int r=3;r>0;r--) {
+      //lVec4f  = (Row(r)*Row(i).v[r]);
       for(int i=r-1;i>=0;i--) { // Works numbers above to 0.0f
-        out.Row(i, (out.Row(i)-(Row(r)*Row(i).v[r])));
+        printf("R[%i] - %fR[%i]\n\n", i, Row(i).v[r], r);
+        out.Row(i, (out.Row(i)-(out.Row(r)*Row(i).v[r])));
         Row(i, (Row(i)-(Row(r)*Row(i).v[r])));
-        //printOp(&el(0,0), &out.el(0,0));
+        printOp(&el(0,0), &out.el(0,0));
       }
     }
 
