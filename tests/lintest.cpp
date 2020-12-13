@@ -24,32 +24,47 @@ Vec4f ToR3(const lVec4f &lvec) {
   return *reinterpret_cast<const Vec4f *>(&lvec);
 }
 
+Matrix4f ToR3(const lMatrix4f &lmat) {
+  return *reinterpret_cast<const Matrix4f *>(&lmat);
+}
+
 int main(int argc, char **argv) {
 
-  lVec4f vector(0, 1, 0);
-  lVec4f axis(0, .5, 0.5);
-  float angleDeg = 39;
+  lMatrix4f testMat0(
+    1.0f, 0.0f, 0.0f, 0.0f,
+    1.0f, 1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
 
-  lMatrix4f mat0;
-  mat0.SetRotation(axis, lToRadians(angleDeg));
+  lMatrix4f testMat1(
+    1.0f, 1.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
 
-  lMatrix4f mat01 = mat0.Inverted();
+  lMatrix4f testMat2(
+    1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
 
-  const lMatrix4f out = mat0 * mat01;
+  const lMatrix4f lTestMat0 = testMat0.Inverted();
+  const lMatrix4f lTestMat1 = testMat1.Inverted();
+  const lMatrix4f lTestMat2 = testMat2.Inverted();
 
-  //printMatrix4(&mat0.lM[0]);
+  printMatrix4(&lTestMat0.lM[0]);
+  printMatrix4(&lTestMat1.lM[0]);
+  printMatrix4(&lTestMat2.lM[0]);
 
-  //printMatrix4(&mat01.lM[0]);
+  printf("\n");
 
-  printMatrix4(&mat01.lM[0]);
+  const Matrix4f r3TestMat0 = ToR3(testMat0);
+  const Matrix4f r3TestMat1 = ToR3(testMat1);
+  const Matrix4f r3TestMat2 = ToR3(testMat2);
 
-  Quaternionf rotate(Homogenize(ToR3(axis)), ToRadians(angleDeg));
-
-  Matrix4f mat1 = rotate.GetMatrix4().Inverted();
-
-  const Matrix4f out1 = mat1;
-
-  printMatrix4(&out1.el(0,0));
+  printMatrix4(&r3TestMat0.Inverted().el(0,0));
+  printMatrix4(&r3TestMat1.Inverted().el(0,0));
+  printMatrix4(&r3TestMat2.Inverted().el(0,0));
 
   return 0;
 }
