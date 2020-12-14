@@ -32,8 +32,12 @@ Matrix4f ToR3(const lMatrix4f &lmat) {
 int main(int argc, char **argv) {
 
   lMatrix4f identity;
+  Matrix4f r3Identity = ToR3(identity);
   lMatrix4f testMat;
-  float max = 0;
+  int messedUp = 0;
+  int r3MessedUp = 0;
+  int uninvertable = 0;
+  bool eq;
 
   srand(485214521);
 
@@ -41,58 +45,56 @@ int main(int argc, char **argv) {
     randmat(&testMat.lM[0]);
     lMatrix4f lTestMat = testMat.Inverted();
     lMatrix4f mult = lTestMat * testMat;
-    bool eq = true;
+    eq = true;
     for(int r=0;r<4;r++) {
         for(int c=0;c<4;c++) {
-            int element = mult.el(r,c) - identity.el(r,c);
-            element = element * element;
-            if(element > max) {
-                max = element;
-            }
-            if(element > 0.000000001) {
+            float element = fabs(mult.el(r,c) - identity.el(r,c));
+            if(element > 0.01) {
                 eq = false;
             }
         }
     }
-    if(eq == false) {// || i==95360 || i==549817 || i==669538) {
-        printf("Original Matrix: %i\n",i);
-        printMatrix4(&testMat.lM[0]);
-        printf("Lin Inverted Matrix:\n");
-        printMatrix4(&lTestMat.lM[0]);
-        printf("Mult Matrix:\n");
-        printMatrix4(&mult.lM[0]);
-        printf("\n");
-        Matrix4f r3Mat = ToR3(testMat).Inverted();
-        Matrix4f r3Mult = ToR3(testMat) * r3Mat;
-        printf("Linear Inverted Matrix:\n");
-        printMatrix4(&r3Mat.el(0,0));
-        printf("Mult Matrix:\n");
-        printMatrix4(&r3Mult.el(0,0));
-        printf("Max: %.20f\n\n",max);
-        printf("Determinant: %.20f\n\n\n", Mat4Det(testMat));
-        //lTestMat = testMat.Inverted(true);
+    if(!eq) {
+        float determinant = Mat4Det(testMat);
+        if(determinant < 0.01 && determinant > -0.01){
+            //printf("Matrix %i: Determinant too small: %.20f\n", i, determinant);
+            uninvertable++;
+        } else {
+            messedUp++;
+            lTestMat = testMat.Inverted(true);
+            printf("Original Matrix: %i\n",i);
+            printMatrix4(&testMat.lM[0]);
+            printf("Lin Inverted Matrix:\n");
+            printMatrix4(&lTestMat.lM[0]);
+            printf("Mult Matrix:\n");
+            printMatrix4(&mult.lM[0]);
+
+            Matrix4f r3TestMat = ToR3(testMat).Inverted();
+            Matrix4f r3Mult = ToR3(testMat) * r3TestMat;
+            bool r3Pass = true;
+            for(int r=0;r<4;r++) {
+                for(int c=0;c<4;c++) {
+                    float element = fabs(r3Mult.el(r,c) - r3Identity.el(r,c));
+                    if(element > 0.01) {
+                        r3Pass = false;
+                    }
+                }
+            }
+            if(!r3Pass) {
+                r3MessedUp++;
+                printf("Linear Inverted Matrix:\n");
+                printMatrix4(&r3TestMat.el(0,0));
+                printf("Mult Matrix:\n");
+                printMatrix4(&r3Mult.el(0,0));
+            }
+            printf("Determinant: %.20f\n\n\n", determinant);
+        }
     }
-  }  
+  }
 
-  //printMatrix4(&lTestMat0.lM[0]);
-  //printMatrix4(&lTestMat1.lM[0]);
-  //printMatrix4(&lTestMat2.lM[0]);
-
-  //bool test mat
-
-  //print
-
-  /*
-  printf("\n");
-
-  const Matrix4f r3TestMat0 = ToR3(testMat0);
-  const Matrix4f r3TestMat1 = ToR3(testMat1);
-  const Matrix4f r3TestMat2 = ToR3(testMat2);
-
-  printMatrix4(&r3TestMat0.Inverted().el(0,0));
-  printMatrix4(&r3TestMat1.Inverted().el(0,0));
-  printMatrix4(&r3TestMat2.Inverted().el(0,0));
-  */
+  printf("Num Messed Up: %i\n", messedUp);
+  printf("Num r3 Messed Up: %i\n", r3MessedUp);
+  printf("Num Uninvertable: %i\n", uninvertable);
 
   return 0;
 }

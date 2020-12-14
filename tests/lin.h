@@ -224,23 +224,26 @@ public:
         if(print) { printOp(&el(0,0), &out.el(0,0)); }
       }
     }
-    */
+    
     for(int i=0;i<3;i++) { // Rearranged in acending order
-      float rowEl = Row(i).v[0];
-      for(int j=i+1;j<4;j++) {
-        if(Row(j).v[0] < rowEl){
-          out.SwapRow(i, j);
-          SwapRow(i, j);
-        }
-      }
+      
+      
     }
     if(print) {
-      printf("Rearranged in acending order\n\n");
+      printf("Rearranged diagonally dominant:\n\n");
       printOp(&el(0,0), &out.el(0,0));
     }
+    */
     for(int r=0;r<4;r++) { // Pivots
+      float rowEl = fabs(Row(r).v[r]);
+      for(int j=r+1;j<4;j++) {
+        if(fabs(Row(j).v[r]) > rowEl){
+          out.SwapRow(r, j);
+          SwapRow(r, j);
+        }
+      }
       float pivotEl = Row(r).v[r];
-      for(int i=0;i<4;i++) { // Works numbers below to 0.0f
+      for(int i=0;i<4;i++) {
         if(i==r) {
           continue;
         }
