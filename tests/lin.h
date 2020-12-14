@@ -235,7 +235,7 @@ public:
       }
     }
     if(print) {
-      printf("Rearranged in acending order");
+      printf("Rearranged in acending order\n\n");
       printOp(&el(0,0), &out.el(0,0));
     }
     for(int r=0;r<4;r++) { // Pivots
@@ -245,7 +245,7 @@ public:
           continue;
         }
         float rowEl = Col(r).v[i];
-        if(print) { printf("R[%i] = %.3fR[%i] - %.3fR[%i]\n\n", i, pivotEl, i, rowEl, r); }
+        if(print) { printf("R[%i] = %.3f*R[%i] - %.3f*R[%i]\n\n", i, pivotEl, i, rowEl, r); }
         out.Row(i, ( (out.Row(i)*pivotEl) - (out.Row(r)*rowEl) ) );
         Row(i, ( (Row(i)*pivotEl) - (Row(r)*rowEl) ) );
         if(print) { printOp(&el(0,0), &out.el(0,0)); }
@@ -258,7 +258,6 @@ public:
       Row(r, (Row(r)/element));
       if(print) { printOp(&el(0,0), &out.el(0,0)); }
     }
-    if(print) { printOp(&el(0,0), &out.el(0,0)); }
     *this = out;
   }
 
@@ -384,4 +383,17 @@ void printOp(float *m0, float *m1) {
     m0[4], m0[5], m0[6], m0[7],      m1[4], m1[5], m1[6], m1[7],
     m0[8], m0[9], m0[10], m0[11],    m1[8], m1[9], m1[10], m1[11],
     m0[12], m0[13], m0[14], m0[15],  m1[12], m1[13], m1[14], m1[15]);
+}
+
+float Mat2Det(float a, float b, float c, float d) {
+  return (a*d) - (b*c);
+}
+float Mat3Det(float a, float b, float c, float d, float e, float f, float g, float h, float i) {
+  return (a*Mat2Det(e,f,h,i)) - (b*Mat2Det(d,f,g,i)) + (c*Mat2Det(d,e,g,h));
+}
+float Mat4Det(lMatrix4f m) {
+  return (m.lM[0]*Mat3Det(m.lM[5], m.lM[6], m.lM[7], m.lM[9], m.lM[10], m.lM[11], m.lM[13], m.lM[14], m.lM[15])) -
+  (m.lM[1]*Mat3Det(m.lM[4], m.lM[6], m.lM[7], m.lM[8], m.lM[10], m.lM[11], m.lM[12], m.lM[14], m.lM[15])) +
+  (m.lM[2]*Mat3Det(m.lM[4], m.lM[5], m.lM[7], m.lM[8], m.lM[9], m.lM[11], m.lM[12], m.lM[13], m.lM[15])) -
+  (m.lM[3]*Mat3Det(m.lM[4], m.lM[5], m.lM[6], m.lM[8], m.lM[9], m.lM[10], m.lM[12], m.lM[13], m.lM[14]));
 }

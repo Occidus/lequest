@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
             }
         }
     }
-    if(eq == false) {//} || i==95360 || i==549817 || i==669538) {
+    if(eq == false) {// || i==95360 || i==549817 || i==669538) {
         printf("Original Matrix: %i\n",i);
         printMatrix4(&testMat.lM[0]);
         printf("Lin Inverted Matrix:\n");
@@ -68,7 +68,9 @@ int main(int argc, char **argv) {
         printMatrix4(&r3Mat.el(0,0));
         printf("Mult Matrix:\n");
         printMatrix4(&r3Mult.el(0,0));
-        printf("Max: %.20f\n\n\n",max);
+        printf("Max: %.20f\n\n",max);
+        printf("Determinant: %.20f\n\n\n", Mat4Det(testMat));
+        //lTestMat = testMat.Inverted(true);
     }
   }  
 
