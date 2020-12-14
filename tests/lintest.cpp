@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "lin.h"
+#include "randmat.h"
 #include "linear.h"
 
 using namespace r3;
@@ -30,32 +31,41 @@ Matrix4f ToR3(const lMatrix4f &lmat) {
 
 int main(int argc, char **argv) {
 
-  lMatrix4f testMat0(
-    1.0f, 0.0f, 0.0f, 0.0f,
-    1.0f, 1.0f, 0.0f, 0.0f,
-    0.0f, 0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 0.0f, 1.0f);
+  lMatrix4f identity;
+  lMatrix4f testMat;
 
-  lMatrix4f testMat1(
-    1.0f, 1.0f, 0.0f, 0.0f,
-    0.0f, 1.0f, 0.0f, 0.0f,
-    0.0f, 0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 0.0f, 1.0f);
+  for(int i=0;i<1000;i++){
+    randmat(&testMat.lM[0]);
+    lMatrix4f lTestMat = testMat.Inverted();
+    lMatrix4f mult = lTestMat * testMat;
+    bool eq = true;
+    for(int r=0;r<4;r++) {
+        for(int c=0;c<4;c++) {
+            int element = mult.el(r,c) - identity.el(r,c);
+            if((element*element) > 0.01) {
+                eq = false;
+            }
+        }
+    }
+    if(eq == false) {
+        printf("Original Matrix:\n");
+        printMatrix4(&testMat.lM[0]);
+        printf("Inverted Matrix:\n");
+        printMatrix4(&lTestMat.lM[0]);
+        printf("\n");
+    }
+}
+  
 
-  lMatrix4f testMat2(
-    1.0f, 0.0f, 0.0f, 0.0f,
-    0.0f, 1.0f, 0.0f, 0.0f,
-    0.0f, 1.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 0.0f, 1.0f);
+  //printMatrix4(&lTestMat0.lM[0]);
+  //printMatrix4(&lTestMat1.lM[0]);
+  //printMatrix4(&lTestMat2.lM[0]);
 
-  const lMatrix4f lTestMat0 = testMat0.Inverted();
-  const lMatrix4f lTestMat1 = testMat1.Inverted();
-  const lMatrix4f lTestMat2 = testMat2.Inverted();
+  //bool test mat
 
-  printMatrix4(&lTestMat0.lM[0]);
-  printMatrix4(&lTestMat1.lM[0]);
-  printMatrix4(&lTestMat2.lM[0]);
+  //print
 
+  /*
   printf("\n");
 
   const Matrix4f r3TestMat0 = ToR3(testMat0);
@@ -65,6 +75,7 @@ int main(int argc, char **argv) {
   printMatrix4(&r3TestMat0.Inverted().el(0,0));
   printMatrix4(&r3TestMat1.Inverted().el(0,0));
   printMatrix4(&r3TestMat2.Inverted().el(0,0));
+  */
 
   return 0;
 }

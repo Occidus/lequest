@@ -60,16 +60,13 @@ enum ElAxis { AXIS_X, AXIS_Y, AXIS_Z };
 class lMatrix4f;
 
 lVec4f Mult(const lMatrix4f &m, const lVec4f &v);
-
 lVec4f operator*(const lMatrix4f &m, const lVec4f &v);
-
 lVec4f Mult(const lVec4f &v, const lMatrix4f &m);
-
 lVec4f operator*(const lVec4f &v, const lMatrix4f &m);
-
 lMatrix4f Mult(const lMatrix4f &m0, const lMatrix4f &m1);
-
 lMatrix4f operator*(const lMatrix4f &m0, const lMatrix4f &m1);
+bool Equals(const lMatrix4f &m0, const lMatrix4f &m1);
+bool operator==(const lMatrix4f &m0, const lMatrix4f &m1);
 
 lVec4f Mult(const lVec4f &v, const float &f);
 lVec4f Divi(const lVec4f &v, const float &f);
@@ -317,11 +314,22 @@ lVec4f Mult(const lVec4f &v, const float &f) { return lVec4f(v.x*f, v.y*f, v.z*f
 lVec4f Divi(const lVec4f &v, const float &f) { return lVec4f(v.x/f, v.y/f, v.z/f, v.w/f); }
 lVec4f add(const lVec4f &v0, const lVec4f &v1) { return lVec4f(v0.x+v1.x, v0.y+v1.y, v0.z+v1.z, v0.w+v1.w); }
 lVec4f min(const lVec4f &v0, const lVec4f &v1) { return lVec4f(v0.x-v1.x, v0.y-v1.y, v0.z-v1.z, v0.w-v1.w); }
+bool Equals(const lMatrix4f &m0, const lMatrix4f &m1) {
+  for(int i=0;i<4;i++) {
+    for(int j=0;j<4;j++) {
+      if(m0.el(i,j) != m1.el(i,j)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
 
 lVec4f operator*(const lVec4f &v, const float &f) { return Mult(v, f); }
 lVec4f operator/(const lVec4f &v, const float &f) { return Divi(v, f); }
 lVec4f operator+(const lVec4f &v0, const lVec4f &v1) { return add(v0, v1); }
 lVec4f operator-(const lVec4f &v0, const lVec4f &v1) { return min(v0, v1); }
+bool operator==(const lMatrix4f &m0, const lMatrix4f &m1) { return Equals(m0, m1); }
 
 void printOp(float *m0, float *m1) {
   printf("%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, %.3f, %.3f\n%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, %.3f, %.3f\n%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, %.3f, %.3f\n%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, %.3f, %.3f\n\n",
