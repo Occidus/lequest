@@ -57,11 +57,10 @@ int main(int argc, char **argv) {
     if(!eq) {
         float determinant = Mat4Det(testMat);
         if(determinant < 0.01 && determinant > -0.01){
-            //printf("Matrix %i: Determinant too small: %.20f\n", i, determinant);
             uninvertable++;
         } else {
             messedUp++;
-            lTestMat = testMat.Inverted(true);
+            //lTestMat = testMat.Inverted(true);
             printf("Original Matrix: %i\n",i);
             printMatrix4(&testMat.lM[0]);
             printf("Lin Inverted Matrix:\n");
