@@ -151,13 +151,26 @@ public:
     el(i, 3) = r.w;
   }
 
+  void SwapRow(int i, int j) {
+    lVec4f stowRow = Row(i);
+    Row(i, Row(j));
+    Row(j, stowRow);
+  }
+
   lVec4f Col(int i) const {
     return lVec4f(el(0, i), el(1, i), el(2, i), el(3, i));
   }
 
-  lMatrix4f Inverted() {
+  void Col(int i, const lVec4f &c) {
+    el(0, i) = c.x;
+    el(1, i) = c.y;
+    el(2, i) = c.z;
+    el(3, i) = c.w;
+  }
+
+  lMatrix4f Inverted(bool print = false) {
     lMatrix4f mat = *this;
-    mat.Invert();
+    mat.Invert(print);
     return mat;
   }
 
@@ -185,33 +198,67 @@ public:
     return mat;
   }
 
-  void Invert() {
+  void Invert(bool print = false) {
     lMatrix4f out;
-    //printOp(&el(0,0), &out.el(0,0));
+    if(print) { printOp(&el(0,0), &out.el(0,0)); }
+    /* // Old invert method
     for(int r=0;r<4;r++) {
       if(Row(r).v[r]!=1.0f) { // Sets diagonal to 1.0f
-        //printf("R[%i] / %f\n\n", r, Row(r).v[r]);
+        if(print) { printf("R[%i] / %f\n\n", r, Row(r).v[r]); }
         out.Row(r, out.Row(r) / Row(r).v[r]);
         Row(r, Row(r) / Row(r).v[r]);
-        //printOp(&el(0,0), &out.el(0,0));
+        if(print) { printOp(&el(0,0), &out.el(0,0)); }
       }
       for(int i=r+1;i<4;i++) { // Works numbers below to 0.0f
-        //printf("R[%i] - %fR[%i]\n\n", i, Row(i).v[r], r);
+        if(print) { printf("R[%i] - %fR[%i]\n\n", i, Row(i).v[r], r); }
         out.Row(i, (out.Row(i)-(out.Row(r)*Row(i).v[r])));
         Row(i, (Row(i)-(Row(r)*Row(i).v[r])));
-        //printOp(&el(0,0), &out.el(0,0));
+        if(print) { printOp(&el(0,0), &out.el(0,0)); }
       }
     }
     for(int r=3;r>0;r--) {
-      //lVec4f  = (Row(r)*Row(i).v[r]);
       for(int i=r-1;i>=0;i--) { // Works numbers above to 0.0f
-        //printf("R[%i] - %fR[%i]\n\n", i, Row(i).v[r], r);
+        if(print) { printf("R[%i] - %fR[%i]\n\n", i, Row(i).v[r], r); }
         out.Row(i, (out.Row(i)-(out.Row(r)*Row(i).v[r])));
         Row(i, (Row(i)-(Row(r)*Row(i).v[r])));
-        //printOp(&el(0,0), &out.el(0,0));
+        if(print) { printOp(&el(0,0), &out.el(0,0)); }
       }
     }
-    //printOp(&el(0,0), &out.el(0,0));
+    */
+    for(int i=0;i<3;i++) { // Rearranged in acending order
+      float rowEl = Row(i).v[0];
+      for(int j=i+1;j<4;j++) {
+        if(Row(j).v[0] < rowEl){
+          out.SwapRow(i, j);
+          SwapRow(i, j);
+        }
+      }
+    }
+    if(print) {
+      printf("Rearranged in acending order");
+      printOp(&el(0,0), &out.el(0,0));
+    }
+    for(int r=0;r<4;r++) { // Pivots
+      float pivotEl = Row(r).v[r];
+      for(int i=0;i<4;i++) { // Works numbers below to 0.0f
+        if(i==r) {
+          continue;
+        }
+        float rowEl = Col(r).v[i];
+        if(print) { printf("R[%i] = %.3fR[%i] - %.3fR[%i]\n\n", i, pivotEl, i, rowEl, r); }
+        out.Row(i, ( (out.Row(i)*pivotEl) - (out.Row(r)*rowEl) ) );
+        Row(i, ( (Row(i)*pivotEl) - (Row(r)*rowEl) ) );
+        if(print) { printOp(&el(0,0), &out.el(0,0)); }
+      }
+    }
+    for(int r=0;r<4;r++) { // Divides diagonals
+      float element = Row(r).v[r];
+      if(print) { printf("R[%i] = R[%i] / %f\n\n", r, r, element); }
+      out.Row(r, (out.Row(r)/element));
+      Row(r, (Row(r)/element));
+      if(print) { printOp(&el(0,0), &out.el(0,0)); }
+    }
+    if(print) { printOp(&el(0,0), &out.el(0,0)); }
     *this = out;
   }
 

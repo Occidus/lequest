@@ -33,8 +33,11 @@ int main(int argc, char **argv) {
 
   lMatrix4f identity;
   lMatrix4f testMat;
+  float max = 0;
 
-  for(int i=0;i<1000;i++){
+  srand(485214521);
+
+  for(int i=0;i<1000000;i++){
     randmat(&testMat.lM[0]);
     lMatrix4f lTestMat = testMat.Inverted();
     lMatrix4f mult = lTestMat * testMat;
@@ -42,20 +45,32 @@ int main(int argc, char **argv) {
     for(int r=0;r<4;r++) {
         for(int c=0;c<4;c++) {
             int element = mult.el(r,c) - identity.el(r,c);
-            if((element*element) > 0.01) {
+            element = element * element;
+            if(element > max) {
+                max = element;
+            }
+            if(element > 0.000000001) {
                 eq = false;
             }
         }
     }
-    if(eq == false) {
-        printf("Original Matrix:\n");
+    if(eq == false) {//} || i==95360 || i==549817 || i==669538) {
+        printf("Original Matrix: %i\n",i);
         printMatrix4(&testMat.lM[0]);
-        printf("Inverted Matrix:\n");
+        printf("Lin Inverted Matrix:\n");
         printMatrix4(&lTestMat.lM[0]);
+        printf("Mult Matrix:\n");
+        printMatrix4(&mult.lM[0]);
         printf("\n");
+        Matrix4f r3Mat = ToR3(testMat).Inverted();
+        Matrix4f r3Mult = ToR3(testMat) * r3Mat;
+        printf("Linear Inverted Matrix:\n");
+        printMatrix4(&r3Mat.el(0,0));
+        printf("Mult Matrix:\n");
+        printMatrix4(&r3Mult.el(0,0));
+        printf("Max: %.20f\n\n\n",max);
     }
-}
-  
+  }  
 
   //printMatrix4(&lTestMat0.lM[0]);
   //printMatrix4(&lTestMat1.lM[0]);
