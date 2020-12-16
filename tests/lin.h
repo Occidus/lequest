@@ -86,13 +86,10 @@ public:
   }
 };
 
-float Dot(lVec3f a, lVec3f b) {
-  return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
-}
+float Dot(lVec3f a, lVec3f b) { return (a.x * b.x) + (a.y * b.y) + (a.z * b.z); }
+float Dot(lVec4f a, lVec4f b) { return (a.x * b.x) + (a.y * b.y) + (a.z * b.z) + (a.w * b.w); }
 
-float Dot(lVec4f a, lVec4f b) {
-  return (a.x * b.x) + (a.y * b.y) + (a.z * b.z) + (a.w * b.w);
-}
+lVec3f Cross(lVec3f v0, lVec3f v1) { return lVec3f((v0.y*v1.z - v0.z*v1.y), (v0.z*v1.x - v0.x*v1.z), (v0.x*v1.y - v0.y*v1.x)); }
 
 enum ElAxis { AXIS_X, AXIS_Y, AXIS_Z };
 
@@ -626,13 +623,13 @@ public:
   union {
     float q[4];
     struct {
-      float x, y, z, w;
+      float w, x, y, z;
     };
   };
 
   lQuaternionf() {
-    q[0] = q[1] = q[2] = 0.0f;
-    q[3] = 1.0f;
+    q[1] = q[1] = q[3] = 0.0f;
+    q[0] = 1.0f;
   }
 
   lQuaternionf(float v[4]) {
@@ -647,7 +644,7 @@ public:
     SetValue(m);
   }
 
-  lQuaternionf(lVec3f &axis, float radians) {
+  lQuaternionf(lVec3f axis, float radians) {
     SetValue(axis, radians);
   }
 
@@ -703,31 +700,24 @@ public:
   void SetValue(lVec3f axis, float theta) {
     theta *= 0.5;
     float sinTheta = sin(theta);
+    w = cos(theta);
     x = sinTheta * axis.x;
     y = sinTheta * axis.y;
     z = sinTheta * axis.z;
-    w = cos(theta);
   }
 
   float *GetValue() {
     return &q[0];
   }
 
-  void GetValue(float &q0, float &q1, float &q2, float &q3) {
-    q0 = q[0];
-    q1 = q[1];
-    q2 = q[2];
-    q3 = q[3];
-  }
-
   void GetValue(lVec3f &axis, float &radians) {
-    radians = acos(q[3]) * 2.0f;
+    radians = acos(q[0]) * 2.0f;
     if (radians == 0.0f)
       axis = lVec3f(0.0, 0.0, 1.0);
     else {
-      axis.x = q[0];
-      axis.y = q[1];
-      axis.z = q[2];
+      axis.x = q[1];
+      axis.y = q[2];
+      axis.z = q[3];
       axis.Normalize();
     }
   }
@@ -815,6 +805,7 @@ bool Equals(const lMatrix3f &m0, const lMatrix3f &m1) {
 }
 
 lVec3f operator*(const lVec3f &v, const float &f) { return Mult(v, f); }
+lVec3f operator*(const float &f, const lVec3f &v) { return Mult(v, f); }
 lVec3f operator/(const lVec3f &v, const float &f) { return Divi(v, f); }
 lVec3f operator+(const lVec3f &v0, const lVec3f &v1) { return add(v0, v1); }
 lVec3f operator-(const lVec3f &v0, const lVec3f &v1) { return min(v0, v1); }
@@ -842,6 +833,24 @@ lVec4f operator+(const lVec4f &v0, const lVec4f &v1) { return add(v0, v1); }
 lVec4f operator-(const lVec4f &v0, const lVec4f &v1) { return min(v0, v1); }
 bool operator==(const lMatrix4f &m0, const lMatrix4f &m1) { return Equals(m0, m1); }
 
+
+lQuaternionf Mult(lQuaternionf q0, lQuaternionf q1) {
+  lVec3f q0axis, q1axis;
+  float q0real, q1real;
+  q0.GetValue(q0axis, q0real);
+  q1.GetValue(q1axis, q1real);
+  return lQuaternionf((Cross(q0axis,q1axis)+(q0real*q1axis)+(q1real*q0axis)),((q0real*q1real)-(Dot(q0axis,q1axis))));
+}
+lVec3f Mult(lQuaternionf q, lVec3f v) {
+  float vCo = (q.w*q.w) - (q.x*q.x) - (q.y*q.y) - (q.z*q.z);
+  float uCo = 2.0f*(v.x*q.x + v.y*q.y + v.z*q.z);
+  float cCo = 2.0f*q.w;
+  return lVec3f((vCo*v.x + uCo*q.x + cCo*(q.y*v.z - q.z*v.y)),(vCo*v.y + uCo*q.y + cCo*(q.z*v.x - q.x*v.z)),(vCo*v.z + uCo*q.z + cCo*(q.x*v.y - q.y*v.x)));
+}
+
+lQuaternionf operator*(lQuaternionf q0, lQuaternionf q1) { Mult(q0,q1); }
+lVec3f operator*(lQuaternionf q, lVec3f v) { Mult(q,v); }
+
 void printOp(float *m0, float *m1) {
   printf("%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, %.3f, %.3f\n%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, %.3f, %.3f\n%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, %.3f, %.3f\n%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, %.3f, %.3f\n\n",
     m0[0], m0[1], m0[2], m0[3],      m1[0], m1[1], m1[2], m1[3],
@@ -853,12 +862,15 @@ void printOp(float *m0, float *m1) {
 float Mat2Det(float a, float b, float c, float d) {
   return (a*d) - (b*c);
 }
-float Mat3Det(float a, float b, float c, float d, float e, float f, float g, float h, float i) {
-  return (a*Mat2Det(e,f,h,i)) - (b*Mat2Det(d,f,g,i)) + (c*Mat2Det(d,e,g,h));
+float Mat3Det(lMatrix3f m) {
+  return (m.lM[0]*Mat2Det(m.lM[4],m.lM[5],m.lM[8],m.lM[7])) - 
+  (m.lM[1]*Mat2Det(m.lM[3],m.lM[5],m.lM[6],m.lM[7])) + 
+  (m.lM[2]*Mat2Det(m.lM[3],m.lM[4],m.lM[6],m.lM[8]));
 }
 float Mat4Det(lMatrix4f m) {
-  return (m.lM[0]*Mat3Det(m.lM[5], m.lM[6], m.lM[7], m.lM[9], m.lM[10], m.lM[11], m.lM[13], m.lM[14], m.lM[15])) -
-  (m.lM[1]*Mat3Det(m.lM[4], m.lM[6], m.lM[7], m.lM[8], m.lM[10], m.lM[11], m.lM[12], m.lM[14], m.lM[15])) +
-  (m.lM[2]*Mat3Det(m.lM[4], m.lM[5], m.lM[7], m.lM[8], m.lM[9], m.lM[11], m.lM[12], m.lM[13], m.lM[15])) -
-  (m.lM[3]*Mat3Det(m.lM[4], m.lM[5], m.lM[6], m.lM[8], m.lM[9], m.lM[10], m.lM[12], m.lM[13], m.lM[14]));
+  lMatrix3f a(m.lM[5], m.lM[6], m.lM[7], m.lM[9], m.lM[10], m.lM[11], m.lM[13], m.lM[14], m.lM[15]);
+  lMatrix3f b(m.lM[4], m.lM[6], m.lM[7], m.lM[8], m.lM[10], m.lM[11], m.lM[12], m.lM[14], m.lM[15]);
+  lMatrix3f c(m.lM[4], m.lM[5], m.lM[7], m.lM[8], m.lM[9], m.lM[11], m.lM[12], m.lM[13], m.lM[15]);
+  lMatrix3f d(m.lM[4], m.lM[5], m.lM[6], m.lM[8], m.lM[9], m.lM[10], m.lM[12], m.lM[13], m.lM[14]);
+  return (m.lM[0]*Mat3Det(a)) - (m.lM[1]*Mat3Det(b)) + (m.lM[2]*Mat3Det(c)) - (m.lM[3]*Mat3Det(d));
 }
