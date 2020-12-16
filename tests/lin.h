@@ -628,20 +628,13 @@ public:
   };
 
   lQuaternionf() { Identity(); }
-
   lQuaternionf(float v[4]) { SetValue(v); }
-
   lQuaternionf(float q0, float q1, float q2, float q3) { SetValue(q0, q1, q2, q3); }
-
   lQuaternionf(lMatrix4f &m) { SetValue(m); }
-
   lQuaternionf(lVec3f axis, float radians) { SetValue(axis, radians); }
+  lQuaternionf(lVec3f &rotateFrom, lVec3f &rotateTo) { SetValue(rotateFrom, rotateTo); }
 
   /*
-  lQuaternionf(lVec3f &rotateFrom, lVec3f &rotateTo) {
-    SetValue(rotateFrom, rotateTo);
-  }
-
   lQuaternionf(lVec3f &fromLook, lVec3f &fromUp, lVec3f &toLook, lVec3f &toUp) {
     SetValue(fromLook, fromUp, toLook, toUp);
   }
@@ -703,7 +696,7 @@ public:
   void SetValue(lVec3f rotFrom, lVec3f rotTo) {
     lVec3f p1 = rotFrom.Normalized();
     lVec3f p2 = rotTo.Normalized();
-    float alpha = p1.Dot(p2);
+    float alpha = Dot(p1,p2);
 
     if(alpha > 1.0f) {
       Identity();
@@ -714,19 +707,46 @@ public:
       } else {
         v = lVec3f(p1.z, p1.y, p1.x);
       }
-      v -= p1 * p1.Dot(v);
+      v = v - (p1 * Dot(p1,v));
       v.Normalize();
       SetValue(v, M_PI);
     } else {
-      p1 = p1.Cross(p2);
+      p1 = Cross(p1,p2);
       p1.Normalize();
-      SetValue(p1, T(acos(alpha)));
+      SetValue(p1, acos(alpha));
     }
+  }
+
+  /*
+  void SetValue(lVec3f fromLook, lVec3f fromUp, lVec3f toLook, lVec3f toUp) {
+    lVec3f fL = fromLook.Normalized();
+    lVec3f fU = fromUp.Normalized();
+    lVec3f tL = toLook.Normalized();
+    lVec3f tU = toUp.Normalized();
+    lQuaternionf r(fL, tL);
+
+    lVec3f rfU = r * fU;
+    // lVec3f rfL = r * fL;
+
+    lVec3f tUo = tU.Orthonormalized(tL);
+
+    float d = max(-1.0f, std::min(1.0f, Dot(rfU, tUo)));
+
+    float twist = acosf(d);
+    lVec3f ux = Cross(rfU, tUo);
+    if (Dot(ux, tL) < 0) {
+      twist = -twist;
+    }
+
+    lQuaternionf rTwist = Quaternion(tL, twist);
+
+    *this = rTwist * r;
   }
 
   float *GetValue() {
     return &q[0];
   }
+  */
 
   void GetValue(lVec3f &axis, float &radians) {
     radians = acos(q[0]) * 2.0f;
