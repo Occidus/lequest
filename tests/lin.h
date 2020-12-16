@@ -627,26 +627,15 @@ public:
     };
   };
 
-  lQuaternionf() {
-    q[1] = q[1] = q[3] = 0.0f;
-    q[0] = 1.0f;
-  }
+  lQuaternionf() { Identity(); }
 
-  lQuaternionf(float v[4]) {
-    SetValue(v);
-  }
+  lQuaternionf(float v[4]) { SetValue(v); }
 
-  lQuaternionf(float q0, float q1, float q2, float q3) {
-    SetValue(q0, q1, q2, q3);
-  }
+  lQuaternionf(float q0, float q1, float q2, float q3) { SetValue(q0, q1, q2, q3); }
 
-  lQuaternionf(lMatrix4f &m) {
-    SetValue(m);
-  }
+  lQuaternionf(lMatrix4f &m) { SetValue(m); }
 
-  lQuaternionf(lVec3f axis, float radians) {
-    SetValue(axis, radians);
-  }
+  lQuaternionf(lVec3f axis, float radians) { SetValue(axis, radians); }
 
   /*
   lQuaternionf(lVec3f &rotateFrom, lVec3f &rotateTo) {
@@ -657,6 +646,11 @@ public:
     SetValue(fromLook, fromUp, toLook, toUp);
   }
   */
+
+  void Identity() {
+    q[1] = q[1] = q[3] = 0.0f;
+    q[0] = 1.0f;
+  }
 
   void SetValue(float q0, float q1, float q2, float q3) {
     q[0] = q0;
@@ -704,6 +698,30 @@ public:
     x = sinTheta * axis.x;
     y = sinTheta * axis.y;
     z = sinTheta * axis.z;
+  }
+
+  void SetValue(lVec3f rotFrom, lVec3f rotTo) {
+    lVec3f p1 = rotFrom.Normalized();
+    lVec3f p2 = rotTo.Normalized();
+    float alpha = p1.Dot(p2);
+
+    if(alpha > 1.0f) {
+      Identity();
+    } if(alpha < -1.0f) {
+      lVec3f v;
+      if(p1.x != p1.y) {
+        v = lVec3f(p1.y, p1.x, p1.z);
+      } else {
+        v = lVec3f(p1.z, p1.y, p1.x);
+      }
+      v -= p1 * p1.Dot(v);
+      v.Normalize();
+      SetValue(v, M_PI);
+    } else {
+      p1 = p1.Cross(p2);
+      p1.Normalize();
+      SetValue(p1, T(acos(alpha)));
+    }
   }
 
   float *GetValue() {
