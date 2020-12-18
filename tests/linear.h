@@ -644,7 +644,7 @@ public:
 
   Vec4 operator-() const {
     Vec4 rv(*this);
-    rv.negate();
+    rv.Negate();
     return rv;
   }
 

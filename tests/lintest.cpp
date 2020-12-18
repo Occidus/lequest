@@ -103,32 +103,48 @@ int main(int argc, char **argv) {
   printf("Num Uninvertable: %i\n", uninvertable);
   */
 
-  float angle = 35.0f;
-  lVec3f axis(1.0f, 1.0f, 0.0f);
-  lMatrix4f lRotMat;
-  lRotMat = lRotMat.Rotate(axis, lToRadians(angle));
-  Matrix4f r3RotMat = ToR3(lRotMat);
-  lVec3f lPoint(2.0f, 3.0f, 5.0f);
-  Vec3f r3Point = ToR3(lPoint);
-  printf("Original Point| %.3f, %.3f, %.3f\n", lPoint.x, lPoint.y, lPoint.z);
-  printf("Axis and Angle(Degrees)| %.3f, %.3f, %.3f : %.3f\n\n", axis.x, axis.y,
-         axis.z, angle);
+  float angle0 = 35.0f;
+  float angle1 = 73.0f;
+  lVec3f axis0(1.0f, 1.0f, 0.0f);
+  lVec3f axis1(1.0f, 0.0f, 1.0f);
+  //lMatrix4f lRotMat;
+  //lRotMat = lRotMat.Rotate(axis1, lToRadians(angle1));
+  //Matrix4f r3RotMat = Quaternionf(ToR3(axis1), lToRadians(angle1)).GetMatrix4();
+  lVec3f lPoint0(2.0f, 3.0f, 5.0f);
+  lVec3f lPoint1(7.0f, 1.0f, 6.0f);
+  Vec3f r3Point0(ToR3(lPoint0));
+  Vec3f r3Point1(ToR3(lPoint1));
+  printf("Point 0| %.3f, %.3f, %.3f\n", lPoint0.x, lPoint0.y, lPoint0.z);
+  printf("Point 1| %.3f, %.3f, %.3f\n", lPoint1.x, lPoint1.y, lPoint1.z);
+  printf("Quat 0 Axis and Angle| %.3f, %.3f, %.3f : %.3f\n", axis0.x, axis0.y, axis0.z, angle0);
+  printf("Quat 1 Axis and Angle| %.3f, %.3f, %.3f : %.3f\n\n", axis1.x, axis1.y, axis1.z, angle1);
+  //printf("Quat 1 Matrix4|\n");
+  //printMatrix4(&lRotMat.lM[0]);
+  //printf("\n");
 
-  lQuaternionf lQuat(lRotMat);
-  Quaternionf r3Quat(r3RotMat);
-  // lQuaternionf lQuat(axis, lToRadians(angle));
-  // Quaternionf r3Quat(ToR3(axis), ToRadians(angle));
-  lPoint = lQuat * lPoint;
-  r3Point = r3Quat * r3Point;
+  lQuaternionf lQuat0(axis0, lToRadians(angle0));
+  lQuaternionf lQuat1(axis1, lToRadians(angle1));
+  //lQuaternionf lQuat1(lRotMat);
+  lQuaternionf lMultQuat = lQuat0 * lQuat1;
+  Quaternionf r3Quat0(ToR3(axis0), ToRadians(angle0));  
+  Quaternionf r3Quat1(ToR3(axis1), ToRadians(angle1)); 
+  //Quaternionf r3Quat1(r3RotMat);
+  Quaternionf r3MultQuat = r3Quat0 * r3Quat1;
+  lPoint0 = lQuat0 * lPoint0;
+  lPoint1 = lQuat1 * lPoint1;
+  r3Point0 = r3Quat0 * r3Point0;
+  r3Point1 = r3Quat1 * r3Point1;
 
-  printf(" lQuat| %.3f, %.3f, %.3f : %.3f\n", lQuat.x, lQuat.y, lQuat.z,
-         lQuat.w);
-  printf("r3Quat| %.3f, %.3f, %.3f : %.3f\n\n", r3Quat.x, r3Quat.y, r3Quat.z,
-         r3Quat.w);
-  printf("l Transformed Point| %.3f, %.3f, %.3f\n", lPoint.x, lPoint.y,
-         lPoint.z);
-  printf("r3 Transformed Point| %.3f, %.3f, %.3f\n", r3Point.x, r3Point.y,
-         r3Point.z);
+  printf(" l Quat 0| %.3f, %.3f, %.3f : %.3f\n", lQuat0.x, lQuat0.y, lQuat0.z, lQuat0.w);
+  printf("r3 Quat 0| %.3f, %.3f, %.3f : %.3f\n", r3Quat0.x, r3Quat0.y, r3Quat0.z, r3Quat0.w);
+  printf(" l Quat 1| %.3f, %.3f, %.3f : %.3f\n", lQuat1.x, lQuat1.y, lQuat1.z, lQuat1.w);
+  printf("r3 Quat 1| %.3f, %.3f, %.3f : %.3f\n\n", r3Quat1.x, r3Quat1.y, r3Quat1.z, r3Quat1.w);
+  printf(" l Mult Quat| %.3f, %.3f, %.3f : %.3f\n", lMultQuat.x, lMultQuat.y, lMultQuat.z, lMultQuat.w);
+  printf("r3 Mult Quat| %.3f, %.3f, %.3f : %.3f\n\n", r3MultQuat.x, r3MultQuat.y, r3MultQuat.z, r3MultQuat.w);
+  printf(" l Point 0 Transformed| %.3f, %.3f, %.3f\n", lPoint0.x, lPoint0.y, lPoint0.z);
+  printf("r3 Point 0 Transformed| %.3f, %.3f, %.3f\n", r3Point0.x, r3Point0.y, r3Point0.z);
+  printf(" l Point 1 Transformed| %.3f, %.3f, %.3f\n", lPoint1.x, lPoint1.y, lPoint1.z);
+  printf("r3 Point 1 Transformed| %.3f, %.3f, %.3f\n", r3Point1.x, r3Point1.y, r3Point1.z);
 
   return 0;
 }

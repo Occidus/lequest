@@ -5,7 +5,6 @@
 #include <stdlib.h>
 
 float lToRadians(float degrees) { return degrees * (M_PI / 180.0f); }
-
 float lToDegrees(float radians) { return radians * (180.0f / M_PI); }
 
 class lVec3f {
@@ -27,7 +26,12 @@ public:
     v[0] = v0;
     v[1] = v1;
     v[2] = v2;
-    v[3] = 1.0f;
+  }
+
+  lVec3f(float *v0) {
+    v[0] = v0[0];
+    v[1] = v0[1];
+    v[2] = v0[2];
   }
 
   void Normalize() {
@@ -41,7 +45,93 @@ public:
     float l = sqrt((x * x) + (y * y) + (z * z));
     return lVec3f((x / l), (y / l), (z / l));
   }
+
+  float &operator[](int i) { return v[i]; }
+  const float &operator[](int i) const { return v[i]; }
+
+  lVec3f &operator*=(float d) {
+    for(int i=0;i<3;i++) {
+      v[i] *= d;
+    }
+    return *this;
+  }
+  lVec3f &operator*=(const lVec3f &u) {
+    for(int i=0;i<3;i++) {
+      v[i] *= u[i];
+    }
+    return *this;
+  }
+  lVec3f &operator/=(float d) { return *this *= (1.0f/d); }
+
+  lVec3f &operator+=(float d) {
+    for(int i=0;i<3;i++) { v[i] += d; }
+    return *this;
+  }
+  lVec3f &operator+=(const lVec3f &u) {
+    for (int i=0;i<3;i++) { v[i] += u.v[i]; }
+    return *this;
+  }
+  lVec3f &operator-=(float d) {
+    for(int i=0;i<3;i++) { v[i] -= d; }
+    return *this;
+  }
+  lVec3f &operator-=(const lVec3f &u) {
+    for (int i=0;i<3;i++) { v[i] -= u.v[i]; }
+    return *this;
+  }
 };
+
+lVec3f operator*(const lVec3f &v, const float &f) {
+  return lVec3f(v) *= f;
+}
+lVec3f operator*(const float &f, const lVec3f &v) {
+  return lVec3f(v) *= f;
+}
+lVec3f operator*(const lVec3f &v0, const lVec3f &v1) {
+  return lVec3f(v0) *= v1;
+}
+lVec3f operator/(const lVec3f &v, const float &f) {
+  return lVec3f(v) /= f;
+}
+
+lVec3f operator+(const lVec3f &v0, const lVec3f &v1) {
+  return lVec3f(v0) += v1;
+}
+lVec3f operator-(const lVec3f &v0, const lVec3f &v1) {
+  return lVec3f(v0) -= v1;
+}
+
+bool operator==(const lVec3f &v0, const lVec3f &v1) {
+  for(int i=0;i<3;i++) {
+    if(v0.v[i] != v1.v[i]) { return false; }
+  }
+  return true;
+}
+bool operator!=(const lVec3f &v0, const lVec3f &v1) {
+  return !(v0 == v1);
+}
+
+lVec3f Min(const lVec3f &v0, const lVec3f &v1) {
+  lVec3f out;
+  out.x = fmin(v0.x, v1.x);
+  out.y = fmin(v0.y, v1.y);
+  out.z = fmin(v0.z, v1.z);
+  return out;
+}
+lVec3f Max(const lVec3f &v0, const lVec3f &v1) {
+  lVec3f out;
+  out.x = fmax(v0.x, v1.x);
+  out.y = fmax(v0.y, v1.y);
+  out.z = fmax(v0.z, v1.z);
+  return out;
+}
+
+float Dot(lVec3f v0, lVec3f v1) {
+  return (v0.x*v1.x) + (v0.y*v1.y) + (v0.z*v1.z);
+}
+lVec3f Cross(lVec3f v0, lVec3f v1) {
+  return lVec3f((v0.y*v1.z - v0.z*v1.y), (v0.z*v1.x - v0.x*v1.z), (v0.x*v1.y - v0.y*v1.x));
+}
 
 class lVec4f {
 public:
@@ -73,35 +163,114 @@ public:
     v[3] = d;
   }
 
+  lVec4f(float *v0) {
+    v[0] = v0[0];
+    v[1] = v0[1];
+    v[2] = v0[2];
+    v[3] = v0[3];
+  }
+
+  void Negate() {
+    for(int i=0;i<4;i++) { v[i] = -v[i]; }
+  }
+  
+  lVec4f Negated() {
+    lVec4f out = lVec4f(&v[0]);
+    out.Negate();
+    return out;
+  }
+
   void Normalize() {
-    float l = sqrt((x * x) + (y * y) + (z * z));
-    x /= l;
-    y /= l;
-    z /= l;
+    float l = sqrt((x*x) + (y*y) + (z*z));
+    for(int i=0;i<4;i++) { v[i] /= l; }
   }
 
   lVec4f Normalized() {
-    float l = sqrt((x * x) + (y * y) + (z * z));
-    return lVec4f((x / l), (y / l), (z / l));
+    lVec4f out(*this);
+    out.Normalize();
+    return out;
+  }
+
+  float &operator[](int i) { return v[i]; }
+  const float &operator[](int i) const { return v[i]; }
+
+  lVec4f &operator*=(float f) {
+    for(int i=0;i<4;i++) { v[i] *= f; }
+    return *this;
+  }
+  lVec4f &operator*=(const lVec4f &u) {
+    for(int i=0;i<4;i++) { v[i] *= u[i]; }
+    return *this;
+  }
+  lVec4f &operator/=(float f) { return *this *= (1.0f/f); }
+
+  lVec4f &operator+=(const lVec4f &u) {
+    for(int i=0;i<4;i++) { v[i] += u.v[i]; }
+    return *this;
+  }
+  lVec4f &operator-=(const lVec4f &u) {
+    for(int i=0;i<4;i++) { v[i] -= u.v[i]; }
+    return *this;
+  }
+  lVec4f operator-() const {
+    return lVec4f(*this).Negated();
   }
 };
 
-float Dot(lVec3f a, lVec3f b) {
-  return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
+lVec4f operator*(const lVec4f &v, const float &f) {
+  return lVec4f(v) *= f;
 }
-float Dot(lVec4f a, lVec4f b) {
-  return (a.x * b.x) + (a.y * b.y) + (a.z * b.z) + (a.w * b.w);
+lVec4f operator*(const float &f, const lVec4f &v) {
+  return lVec4f(v) *= f;
+}
+lVec4f operator*(const lVec4f &v0, const lVec4f &v1) {
+  return lVec4f(v0) *= v1;
+}
+lVec4f operator/(const lVec4f &v, const float &f) {
+  return lVec4f(v) /= f;
 }
 
-lVec3f Cross(lVec3f v0, lVec3f v1) {
-  return lVec3f((v0.y * v1.z - v0.z * v1.y), (v0.z * v1.x - v0.x * v1.z),
-                (v0.x * v1.y - v0.y * v1.x));
+lVec4f operator+(const lVec4f &v0, const lVec4f &v1) {
+  return lVec4f(v0) += v1;
+}
+lVec4f operator-(const lVec4f &v0, const lVec4f &v1) {
+  return lVec4f(v0) -= v1;
+}
+
+bool operator==(const lVec4f &v0, const lVec4f &v1) {
+  for (int i=0;i<4;i++) {
+    if(v0.v[i] != v1.v[i]) { return false; }
+  }
+  return true;
+}
+bool operator!=(const lVec4f &v0, const lVec4f &v1) {
+  return !(v0 == v1);
+}
+
+lVec4f Min(const lVec4f &v0, const lVec4f &v1) {
+  lVec4f out;
+  out.x = fmin(v0.x, v1.x);
+  out.y = fmin(v0.y, v1.y);
+  out.z = fmin(v0.z, v1.z);
+  out.w = fmin(v0.w, v1.w);
+  return out;
+}
+lVec4f Max(const lVec4f &v0, const lVec4f &v1) {
+  lVec4f out;
+  out.x = fmax(v0.x, v1.x);
+  out.y = fmax(v0.y, v1.y);
+  out.z = fmax(v0.z, v1.z);
+  out.w = fmax(v0.w, v1.w);
+  return out;
+}
+
+float Dot(lVec4f v0, lVec4f v1) {
+  return (v0.x*v1.x) + (v0.y*v1.y) + (v0.z*v1.z) + (v0.w*v1.w);
 }
 
 enum ElAxis { AXIS_X, AXIS_Y, AXIS_Z };
 
 class lMatrix3f;
-class lMatrix4f;
 
 lVec3f Mult(const lMatrix3f &m, const lVec3f &v);
 lVec3f Mult(const lVec3f &v, const lMatrix3f &m);
@@ -110,16 +279,6 @@ lMatrix3f Mult(const lMatrix3f &m0, const lMatrix3f &m1);
 lVec3f operator*(const lMatrix3f &m, const lVec3f &v);
 lVec3f operator*(const lVec3f &v, const lMatrix3f &m);
 lMatrix3f operator*(const lMatrix3f &m0, const lMatrix3f &m1);
-
-lVec4f Mult(const lMatrix4f &m, const lVec4f &v);
-lVec4f Mult(const lVec4f &v, const lMatrix4f &m);
-lMatrix4f Mult(const lMatrix4f &m0, const lMatrix4f &m1);
-bool Equals(const lMatrix4f &m0, const lMatrix4f &m1);
-
-lVec4f operator*(const lMatrix4f &m, const lVec4f &v);
-lVec4f operator*(const lVec4f &v, const lMatrix4f &m);
-lMatrix4f operator*(const lMatrix4f &m0, const lMatrix4f &m1);
-bool operator==(const lMatrix4f &m0, const lMatrix4f &m1);
 
 lVec3f Mult(const lVec3f &v, const float &f);
 lVec3f Divi(const lVec3f &v, const float &f);
@@ -133,16 +292,6 @@ lVec3f operator+(const lVec3f &v0, const lVec3f &v1);
 lVec3f operator-(const lVec3f &v0, const lVec3f &v1);
 bool operator==(const lMatrix3f &m0, const lMatrix3f &m1);
 
-lVec4f Mult(const lVec4f &v, const float &f);
-lVec4f Divi(const lVec4f &v, const float &f);
-lVec4f add(const lVec4f &v0, const lVec4f &v1);
-lVec4f min(const lVec4f &v0, const lVec4f &v1);
-
-lVec4f operator*(const lVec4f &v, const float &f);
-lVec4f operator/(const lVec4f &v, const float &f);
-lVec4f operator+(const lVec4f &v0, const lVec4f &v1);
-lVec4f operator-(const lVec4f &v0, const lVec4f &v1);
-
 void printOp(float *m0, float *m1);
 
 class lMatrix3f {
@@ -151,19 +300,8 @@ public:
 
   lMatrix3f() { MakeIdentity(); }
 
-  lMatrix3f(float f00, float f01, float f02, float f10, float f11, float f12,
-            float f20, float f21, float f22) {
-    el(0, 0) = f00;
-    el(0, 1) = f01;
-    el(0, 2) = f02;
-
-    el(1, 0) = f10;
-    el(1, 1) = f11;
-    el(1, 2) = f12;
-
-    el(2, 0) = f20;
-    el(2, 1) = f21;
-    el(2, 2) = f22;
+  lMatrix3f(float f00, float f01, float f02, float f10, float f11, float f12, float f20, float f21, float f22) {
+    Set(f00, f01, f02, f10, f11, f12, f20, f21, f22);
   }
 
   lMatrix3f(const lVec3f &r0, const lVec3f &r1, const lVec3f &r2) {
@@ -173,17 +311,7 @@ public:
   }
 
   void MakeIdentity() {
-    el(0, 0) = 1.0;
-    el(0, 1) = 0.0;
-    el(0, 2) = 0.0;
-
-    el(1, 0) = 0.0;
-    el(1, 1) = 1.0;
-    el(1, 2) = 0.0;
-
-    el(2, 0) = 0.0;
-    el(2, 1) = 0.0;
-    el(2, 2) = 1.0;
+    Set(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
   }
 
   lVec3f Row(int i) const { return lVec3f(el(i, 0), el(i, 1), el(i, 2)); }
@@ -232,71 +360,55 @@ public:
     return mat;
   }
 
-  /*void Invert(bool print = false) {
-    lMatrix4f out;
-    if(print) { printOp(&el(0,0), &out.el(0,0)); }
-    /* // Old invert method
-    for(int r=0;r<4;r++) {
-      if(Row(r).v[r]!=1.0f) { // Sets diagonal to 1.0f
-        if(print) { printf("R[%i] / %f\n\n", r, Row(r).v[r]); }
-        out.Row(r, out.Row(r) / Row(r).v[r]);
-        Row(r, Row(r) / Row(r).v[r]);
-        if(print) { printOp(&el(0,0), &out.el(0,0)); }
-      }
-      for(int i=r+1;i<4;i++) { // Works numbers below to 0.0f
-        if(print) { printf("R[%i] - %fR[%i]\n\n", i, Row(i).v[r], r); }
-        out.Row(i, (out.Row(i)-(out.Row(r)*Row(i).v[r])));
-        Row(i, (Row(i)-(Row(r)*Row(i).v[r])));
-        if(print) { printOp(&el(0,0), &out.el(0,0)); }
-      }
-    }
-    for(int r=3;r>0;r--) {
-      for(int i=r-1;i>=0;i--) { // Works numbers above to 0.0f
-        if(print) { printf("R[%i] - %fR[%i]\n\n", i, Row(i).v[r], r); }
-        out.Row(i, (out.Row(i)-(out.Row(r)*Row(i).v[r])));
-        Row(i, (Row(i)-(Row(r)*Row(i).v[r])));
-        if(print) { printOp(&el(0,0), &out.el(0,0)); }
-      }
-    }
-
-    for(int i=0;i<3;i++) { // Rearranged in acending order
-
-
-    }
+  void Invert(bool print = false) {
+    lMatrix3f out;
     if(print) {
-      printf("Rearranged diagonally dominant:\n\n");
-      printOp(&el(0,0), &out.el(0,0));
+      printOp(&el(0, 0), &out.el(0, 0));
     }
-    //
-    for(int r=0;r<4;r++) { // Pivots
+    for(int r = 0; r < 4; r++) { // Pivots
       float rowEl = fabs(Row(r).v[r]);
-      for(int j=r+1;j<4;j++) {
-        if(fabs(Row(j).v[r]) > rowEl){
+      for (int j = r + 1; j < 4; j++) {
+        if (fabs(Row(j).v[r]) > rowEl) {
           out.SwapRow(r, j);
           SwapRow(r, j);
         }
       }
       float pivotEl = Row(r).v[r];
-      for(int i=0;i<4;i++) {
-        if(i==r) {
+      for (int i = 0; i < 4; i++) {
+        if (i == r) {
           continue;
         }
         float rowEl = Col(r).v[i];
-        if(print) { printf("R[%i] = %.3f*R[%i] - %.3f*R[%i]\n\n", i, pivotEl, i,
-  rowEl, r); } out.Row(i, ( (out.Row(i)*pivotEl) - (out.Row(r)*rowEl) ) );
-        Row(i, ( (Row(i)*pivotEl) - (Row(r)*rowEl) ) );
-        if(print) { printOp(&el(0,0), &out.el(0,0)); }
+        if (print) {
+          printf("R[%i] = %.3f*R[%i] - %.3f*R[%i]\n\n", i, pivotEl, i, rowEl,
+                 r);
+        }
+        out.Row(i, ((out.Row(i) * pivotEl) - (out.Row(r) * rowEl)));
+        Row(i, ((Row(i) * pivotEl) - (Row(r) * rowEl)));
+        if (print) {
+          printOp(&el(0, 0), &out.el(0, 0));
+        }
       }
     }
-    for(int r=0;r<4;r++) { // Divides diagonals
+    for (int r = 0; r < 4; r++) { // Divides diagonals
       float element = Row(r).v[r];
-      if(print) { printf("R[%i] = R[%i] / %f\n\n", r, r, element); }
-      out.Row(r, (out.Row(r)/element));
-      Row(r, (Row(r)/element));
-      if(print) { printOp(&el(0,0), &out.el(0,0)); }
+      if (print) {
+        printf("R[%i] = R[%i] / %f\n\n", r, r, element);
+      }
+      out.Row(r, (out.Row(r) / element));
+      Row(r, (Row(r) / element));
+      if (print) {
+        printOp(&el(0, 0), &out.el(0, 0));
+      }
     }
     *this = out;
-  }*/
+  }
+
+  void Set(float f00, float f01, float f02, float f10, float f11, float f12, float f20, float f21, float f22) {
+    Row(0, lVec3f(f00, f01, f02));
+    Row(1, lVec3f(f10, f11, f12));
+    Row(2, lVec3f(f20, f21, f22));
+  }
 
   void SetRotation(ElAxis a, double angle) { // Rotates about x, y, or z axis
     MakeIdentity();
@@ -361,34 +473,26 @@ public:
   float el(int row, int col) const { return lM[(row * 3) + col]; }
 };
 
+class lMatrix4f;
+
+lVec4f Mult(const lMatrix4f &m, const lVec4f &v);
+lVec4f Mult(const lVec4f &v, const lMatrix4f &m);
+lMatrix4f Mult(const lMatrix4f &m0, const lMatrix4f &m1);
+bool Equals(const lMatrix4f &m0, const lMatrix4f &m1);
+
+lVec4f operator*(const lMatrix4f &m, const lVec4f &v);
+lVec4f operator*(const lVec4f &v, const lMatrix4f &m);
+lMatrix4f operator*(const lMatrix4f &m0, const lMatrix4f &m1);
+bool operator==(const lMatrix4f &m0, const lMatrix4f &m1);
+
 class lMatrix4f {
 public:
   float lM[16];
 
   lMatrix4f() { MakeIdentity(); }
 
-  lMatrix4f(float f00, float f01, float f02, float f03, float f10, float f11,
-            float f12, float f13, float f20, float f21, float f22, float f23,
-            float f30, float f31, float f32, float f33) {
-    el(0, 0) = f00;
-    el(0, 1) = f01;
-    el(0, 2) = f02;
-    el(0, 3) = f03;
-
-    el(1, 0) = f10;
-    el(1, 1) = f11;
-    el(1, 2) = f12;
-    el(1, 3) = f13;
-
-    el(2, 0) = f20;
-    el(2, 1) = f21;
-    el(2, 2) = f22;
-    el(2, 3) = f23;
-
-    el(3, 0) = f30;
-    el(3, 1) = f31;
-    el(3, 2) = f32;
-    el(3, 3) = f33;
+  lMatrix4f(float f00, float f01, float f02, float f03, float f10, float f11, float f12, float f13, float f20, float f21, float f22, float f23, float f30, float f31, float f32, float f33) {
+    Set(f00, f01, f02, f03, f10, f11, f12, f13, f20, f21, f22, f23, f30, f31, f32, f33);
   }
 
   lMatrix4f(const lVec4f &r0, const lVec4f &r1, const lVec4f &r2,
@@ -400,25 +504,7 @@ public:
   }
 
   void MakeIdentity() {
-    el(0, 0) = 1.0;
-    el(0, 1) = 0.0;
-    el(0, 2) = 0.0;
-    el(0, 3) = 0.0;
-
-    el(1, 0) = 0.0;
-    el(1, 1) = 1.0;
-    el(1, 2) = 0.0;
-    el(1, 3) = 0.0;
-
-    el(2, 0) = 0.0;
-    el(2, 1) = 0.0;
-    el(2, 2) = 1.0;
-    el(2, 3) = 0.0;
-
-    el(3, 0) = 0.0;
-    el(3, 1) = 0.0;
-    el(3, 2) = 0.0;
-    el(3, 3) = 1.0;
+    Set(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
   }
 
   lVec4f Row(int i) const {
@@ -521,6 +607,15 @@ public:
       }
     }
     *this = out;
+  }
+
+  void Set(float f00, float f01, float f02, float f03, float f10, float f11,
+            float f12, float f13, float f20, float f21, float f22, float f23,
+            float f30, float f31, float f32, float f33) {
+    Row(0, lVec4f(f00, f01, f02, f03));
+    Row(1, lVec4f(f10, f11, f12, f13));
+    Row(2, lVec4f(f20, f21, f22, f23));
+    Row(3, lVec4f(f30, f31, f32, f33));
   }
 
   void SetRotation(ElAxis a, double angle) { // Rotates about x, y, or z axis
@@ -673,35 +768,65 @@ public:
   }
 
   void SetValue(lMatrix4f m) {
+    /*
     float t, k;
     if (m.el(2, 2) < 0) {
       if (m.el(0, 0) > m.el(1, 1)) { // X-form
         t = 1 + m.el(0, 0) - m.el(1, 1) - m.el(2, 2);
         k = 0.5 / sqrt(t);
-        SetValue(t * k, (m.el(0, 1) + m.el(1, 0)) * k,
-                 (m.el(2, 0) + m.el(0, 2)) * k, (m.el(1, 2) - m.el(2, 1)) * k);
+        SetValue(t * k, (m.el(0, 1) + m.el(1, 0)) * k, (m.el(2, 0) + m.el(0, 2)) * k, (m.el(1, 2) - m.el(2, 1)) * k);
       } else { // Y-form
         t = 1 - m.el(0, 0) + m.el(1, 1) - m.el(2, 2);
         k = 0.5 / sqrt(t);
-        SetValue((m.el(0, 1) + m.el(1, 0)) * k, t * k,
-                 (m.el(1, 2) + m.el(2, 1)) * k, (m.el(2, 0) - m.el(0, 2)) * k);
+        SetValue((m.el(0, 1) + m.el(1, 0)) * k, t * k, (m.el(1, 2) + m.el(2, 1)) * k, (m.el(2, 0) - m.el(0, 2)) * k);
       }
     } else {
       if (m.el(0, 0) < -m.el(1, 1)) { // Z-form
         t = 1 - m.el(0, 0) - m.el(1, 1) + m.el(2, 2);
         k = 0.5 / sqrt(t);
-        SetValue((m.el(2, 0) + m.el(0, 2)) * k, (m.el(1, 2) + m.el(2, 1)) * k,
-                 t * k, (m.el(0, 1) - m.el(1, 0)) * k);
+        SetValue((m.el(2, 0) + m.el(0, 2)) * k, (m.el(1, 2) + m.el(2, 1)) * k, t * k, (m.el(0, 1) - m.el(1, 0)) * k);
       } else { // W-form
         t = 1 + m.el(0, 0) + m.el(1, 1) + m.el(2, 2);
         k = 0.5 / sqrt(t);
-        SetValue((m.el(1, 2) - m.el(2, 1)) * k, (m.el(2, 0) - m.el(0, 2)) * k,
-                 (m.el(0, 1) - m.el(1, 0)) * k, t * k);
+        SetValue((m.el(1, 2) - m.el(2, 1)) * k, (m.el(2, 0) - m.el(0, 2)) * k, (m.el(0, 1) - m.el(1, 0)) * k, t * k);
       }
     }
+    */
+
+    float tr, S;
+
+    tr = m.el(0,0) + m.el(1,1) + m.el(2,2);
+
+    if(tr > 0) {
+      S = sqrt(tr + 1.0)*2; // S=4*qw
+      q[0] = 0.25*S;
+      q[1] = (m.el(2,1) - m.el(1,2))/S;
+      q[2] = (m.el(0,2) - m.el(2,0))/S;
+      q[3] = (m.el(1,0) - m.el(0,1))/S;
+    } else if((m.el(0,0) > m.el(1,1)) && (m.el(0,0) > m.el(2,2))) {
+      S = sqrt(1.0 + m.el(0,0) - m.el(1,1) - m.el(2,2))*2; // S=4*qx
+      q[0] = (m.el(2, 1) - m.el(1,2))/S;
+      q[1] = 0.25*S;
+      q[2] = (m.el(0,1) + m.el(1,0))/S;
+      q[3] = (m.el(0,2) + m.el(2,0))/S;
+    } else if(m.el(1,1) > m.el(2,2)) {
+      S = sqrt(1.0 + m.el(1,1) - m.el(0,0) - m.el(2,2))*2; // S=4*qy
+      q[0] = (m.el(0,2) - m.el(2,0))/S;
+      q[1] = (m.el(0,1) + m.el(1,0))/S;
+      q[2] = 0.25*S;
+      q[3] = (m.el(1,2) + m.el(2,1))/S;
+    } else {
+      S = sqrt(1.0 + m.el(2,2) - m.el(0,0) - m.el(1,1))*2; // S=4*qz
+      q[0] = (m.el(1,0) - m.el(0,1))/S;
+      q[1] = (m.el(0,2) + m.el(2,0))/S;
+      q[2] = (m.el(1,2) + m.el(2,1))/S;
+      q[3] = 0.25*S;
+    }
+    printf("%.3f, %.3f, %.3f : %.3f\n", x, y, z, w);
   }
 
   void SetValue(lVec3f axis, float theta) {
+    axis.Normalize();
     theta *= 0.5;
     float sinTheta = sin(theta);
     w = cos(theta);
@@ -861,18 +986,7 @@ lMatrix4f operator*(const lMatrix4f &m0, const lMatrix4f &m1) {
   return Mult(m0, m1);
 }
 
-lVec3f Mult(const lVec3f &v, const float &f) {
-  return lVec3f(v.x * f, v.y * f, v.z * f);
-}
-lVec3f Divi(const lVec3f &v, const float &f) {
-  return lVec3f(v.x / f, v.y / f, v.z / f);
-}
-lVec3f add(const lVec3f &v0, const lVec3f &v1) {
-  return lVec3f(v0.x + v1.x, v0.y + v1.y, v0.z + v1.z);
-}
-lVec3f min(const lVec3f &v0, const lVec3f &v1) {
-  return lVec3f(v0.x - v1.x, v0.y - v1.y, v0.z - v1.z);
-}
+
 bool Equals(const lMatrix3f &m0, const lMatrix3f &m1) {
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
@@ -884,27 +998,11 @@ bool Equals(const lMatrix3f &m0, const lMatrix3f &m1) {
   return true;
 }
 
-lVec3f operator*(const lVec3f &v, const float &f) { return Mult(v, f); }
-lVec3f operator*(const float &f, const lVec3f &v) { return Mult(v, f); }
-lVec3f operator/(const lVec3f &v, const float &f) { return Divi(v, f); }
-lVec3f operator+(const lVec3f &v0, const lVec3f &v1) { return add(v0, v1); }
-lVec3f operator-(const lVec3f &v0, const lVec3f &v1) { return min(v0, v1); }
 bool operator==(const lMatrix3f &m0, const lMatrix3f &m1) {
   return Equals(m0, m1);
 }
 
-lVec4f Mult(const lVec4f &v, const float &f) {
-  return lVec4f(v.x * f, v.y * f, v.z * f, v.w * f);
-}
-lVec4f Divi(const lVec4f &v, const float &f) {
-  return lVec4f(v.x / f, v.y / f, v.z / f, v.w / f);
-}
-lVec4f add(const lVec4f &v0, const lVec4f &v1) {
-  return lVec4f(v0.x + v1.x, v0.y + v1.y, v0.z + v1.z, v0.w + v1.w);
-}
-lVec4f min(const lVec4f &v0, const lVec4f &v1) {
-  return lVec4f(v0.x - v1.x, v0.y - v1.y, v0.z - v1.z, v0.w - v1.w);
-}
+
 bool Equals(const lMatrix4f &m0, const lMatrix4f &m1) {
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 4; j++) {
@@ -916,34 +1014,30 @@ bool Equals(const lMatrix4f &m0, const lMatrix4f &m1) {
   return true;
 }
 
-lVec4f operator*(const lVec4f &v, const float &f) { return Mult(v, f); }
-lVec4f operator/(const lVec4f &v, const float &f) { return Divi(v, f); }
-lVec4f operator+(const lVec4f &v0, const lVec4f &v1) { return add(v0, v1); }
-lVec4f operator-(const lVec4f &v0, const lVec4f &v1) { return min(v0, v1); }
 bool operator==(const lMatrix4f &m0, const lMatrix4f &m1) {
   return Equals(m0, m1);
 }
 
+
 lQuaternionf Mult(lQuaternionf q0, lQuaternionf q1) {
-  lVec3f q0axis, q1axis;
-  float q0real, q1real;
-  q0.GetValue(q0axis, q0real);
-  q1.GetValue(q1axis, q1real);
-  return lQuaternionf(
-      (Cross(q0axis, q1axis) + (q0real * q1axis) + (q1real * q0axis)),
-      ((q0real * q1real) - (Dot(q0axis, q1axis))));
+  lQuaternionf out;
+  out.w = (q0.w*q1.w)-(q0.x*q1.x)-(q0.y*q1.y)-(q0.z*q1.z);
+  out.x = (q0.w*q1.x)+(q0.x*q1.w)+(q0.y*q1.z)-(q0.z*q1.y);
+  out.y = (q0.w*q1.y)+(q0.y*q1.w)+(q0.z*q1.x)-(q0.x*q1.z);
+  out.z = (q0.w*q1.z)+(q0.z*q1.w)+(q0.x*q1.y)-(q0.y*q1.x);
+  return out;
 }
 lVec3f Mult(lQuaternionf q, lVec3f v) {
-  float vCo = (q.w * q.w) - (q.x * q.x) - (q.y * q.y) - (q.z * q.z);
-  float uCo = 2.0f * (v.x * q.x + v.y * q.y + v.z * q.z);
-  float cCo = 2.0f * q.w;
-  return lVec3f((vCo * v.x + uCo * q.x + cCo * (q.y * v.z - q.z * v.y)),
-                (vCo * v.y + uCo * q.y + cCo * (q.z * v.x - q.x * v.z)),
-                (vCo * v.z + uCo * q.z + cCo * (q.x * v.y - q.y * v.x)));
+  float vCo = (q.w*q.w) - (q.x*q.x) - (q.y*q.y) - (q.z*q.z);
+  float uCo = 2.0f*((v.x*q.x) + (v.y*q.y) + (v.z*q.z));
+  float cCo = 2.0f*q.w;
+  return lVec3f(((vCo*v.x)+(uCo*q.x)+cCo*((q.y*v.z)-(q.z*v.y))),
+    ((vCo*v.y)+(uCo*q.y)+cCo*((q.z*v.x)-(q.x*v.z))),
+    ((vCo*v.z)+(uCo*q.z)+cCo*((q.x*v.y)-(q.y*v.x))));
 }
 
-lQuaternionf operator*(lQuaternionf q0, lQuaternionf q1) { Mult(q0, q1); }
-lVec3f operator*(lQuaternionf q, lVec3f v) { Mult(q, v); }
+lQuaternionf operator*(lQuaternionf q0, lQuaternionf q1) { return Mult(q0, q1); }
+lVec3f operator*(lQuaternionf q, lVec3f v) { return Mult(q, v); }
 
 void printOp(float *m0, float *m1) {
   printf("%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, %.3f, %.3f\n%.3f, %.3f, %.3f, "
