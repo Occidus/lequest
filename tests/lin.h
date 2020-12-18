@@ -6,6 +6,7 @@
 
 float lToRadians(float degrees) { return degrees * (M_PI / 180.0f); }
 float lToDegrees(float radians) { return radians * (180.0f / M_PI); }
+float Mat2Det(float a, float b, float c, float d) { return (a * d) - (b * c); }
 
 class lVec3f {
 public:
@@ -270,29 +271,18 @@ float Dot(lVec4f v0, lVec4f v1) {
 
 enum ElAxis { AXIS_X, AXIS_Y, AXIS_Z };
 
+void printOp(float *m0, float *m1) {
+  printf("%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, %.3f, %.3f\n%.3f, %.3f, %.3f, "
+         "%.3f\t%.3f, %.3f, %.3f, %.3f\n%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, "
+         "%.3f, %.3f\n%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, %.3f, %.3f\n\n",
+         m0[0], m0[1], m0[2], m0[3], m1[0], m1[1], m1[2], m1[3], m0[4], m0[5],
+         m0[6], m0[7], m1[4], m1[5], m1[6], m1[7], m0[8], m0[9], m0[10], m0[11],
+         m1[8], m1[9], m1[10], m1[11], m0[12], m0[13], m0[14], m0[15], m1[12],
+         m1[13], m1[14], m1[15]);
+}
 class lMatrix3f;
 
-lVec3f Mult(const lMatrix3f &m, const lVec3f &v);
-lVec3f Mult(const lVec3f &v, const lMatrix3f &m);
-lMatrix3f Mult(const lMatrix3f &m0, const lMatrix3f &m1);
-
-lVec3f operator*(const lMatrix3f &m, const lVec3f &v);
-lVec3f operator*(const lVec3f &v, const lMatrix3f &m);
 lMatrix3f operator*(const lMatrix3f &m0, const lMatrix3f &m1);
-
-lVec3f Mult(const lVec3f &v, const float &f);
-lVec3f Divi(const lVec3f &v, const float &f);
-lVec3f add(const lVec3f &v0, const lVec3f &v1);
-lVec3f min(const lVec3f &v0, const lVec3f &v1);
-bool Equals(const lMatrix3f &m0, const lMatrix3f &m1);
-
-lVec3f operator*(const lVec3f &v, const float &f);
-lVec3f operator/(const lVec3f &v, const float &f);
-lVec3f operator+(const lVec3f &v0, const lVec3f &v1);
-lVec3f operator-(const lVec3f &v0, const lVec3f &v1);
-bool operator==(const lMatrix3f &m0, const lMatrix3f &m1);
-
-void printOp(float *m0, float *m1);
 
 class lMatrix3f {
 public:
@@ -336,11 +326,17 @@ public:
     el(2, i) = c.z;
   }
 
-  /*lMatrix4f Inverted(bool print = false) {
-    lMatrix4f mat = *this;
-    mat.Invert(print);
+  float Determinant() {
+    return (lM[0] * Mat2Det(lM[4], lM[5], lM[8], lM[7])) -
+           (lM[1] * Mat2Det(lM[3], lM[5], lM[6], lM[7])) +
+           (lM[2] * Mat2Det(lM[3], lM[4], lM[6], lM[8]));
+  }
+
+  lMatrix3f Inverted() {
+    lMatrix3f mat = *this;
+    mat.Invert();
     return mat;
-  }*/
+  }
 
   static lMatrix3f Rotate(ElAxis a, double angle) {
     lMatrix3f mat;
@@ -360,46 +356,28 @@ public:
     return mat;
   }
 
-  void Invert(bool print = false) {
+  void Invert() {
     lMatrix3f out;
-    if(print) {
-      printOp(&el(0, 0), &out.el(0, 0));
-    }
-    for(int r = 0; r < 4; r++) { // Pivots
+    for(int r = 0; r < 3; r++) { // Pivots
       float rowEl = fabs(Row(r).v[r]);
-      for (int j = r + 1; j < 4; j++) {
+      for (int j = r + 1; j < 3; j++) {
         if (fabs(Row(j).v[r]) > rowEl) {
           out.SwapRow(r, j);
           SwapRow(r, j);
         }
       }
       float pivotEl = Row(r).v[r];
-      for (int i = 0; i < 4; i++) {
-        if (i == r) {
-          continue;
-        }
+      for (int i = 0; i < 3; i++) {
+        if (i == r) { continue; }
         float rowEl = Col(r).v[i];
-        if (print) {
-          printf("R[%i] = %.3f*R[%i] - %.3f*R[%i]\n\n", i, pivotEl, i, rowEl,
-                 r);
-        }
         out.Row(i, ((out.Row(i) * pivotEl) - (out.Row(r) * rowEl)));
         Row(i, ((Row(i) * pivotEl) - (Row(r) * rowEl)));
-        if (print) {
-          printOp(&el(0, 0), &out.el(0, 0));
-        }
       }
     }
-    for (int r = 0; r < 4; r++) { // Divides diagonals
+    for (int r = 0; r < 3; r++) { // Divides diagonals
       float element = Row(r).v[r];
-      if (print) {
-        printf("R[%i] = R[%i] / %f\n\n", r, r, element);
-      }
       out.Row(r, (out.Row(r) / element));
       Row(r, (Row(r) / element));
-      if (print) {
-        printOp(&el(0, 0), &out.el(0, 0));
-      }
     }
     *this = out;
   }
@@ -416,7 +394,6 @@ public:
     case AXIS_X: { // x-axis
       el(1, 1) = cos(angle);
       el(1, 2) = -sin(angle);
-
       el(2, 1) = sin(angle);
       el(2, 2) = cos(angle);
       break;
@@ -424,7 +401,6 @@ public:
     case AXIS_Y: { // y-axis
       el(0, 0) = cos(angle);
       el(0, 2) = sin(angle);
-
       el(2, 0) = -sin(angle);
       el(2, 2) = cos(angle);
       break;
@@ -432,7 +408,6 @@ public:
     case AXIS_Z: { // z-axis
       el(0, 0) = cos(angle);
       el(0, 1) = -sin(angle);
-
       el(1, 0) = sin(angle);
       el(1, 1) = cos(angle);
       break;
@@ -447,7 +422,6 @@ public:
     lMatrix3f toXyPlane, fromXyPlane, toXAxis, fromXAxis;
     float xRot = 0.0f;
     float zRot = 0.0f;
-
     if (a.z != 0) {
       xRot = atan2(a.z, a.y);
       toXyPlane = lMatrix3f::Rotate(AXIS_X, -xRot);
@@ -458,7 +432,6 @@ public:
       toXAxis = lMatrix3f::Rotate(AXIS_Z, -zRot);
       fromXAxis = lMatrix3f::Rotate(AXIS_Z, zRot);
     }
-
     *this = fromXyPlane * fromXAxis * lMatrix3f::Rotate(AXIS_X, angle) *
             toXAxis * toXyPlane;
   }
@@ -473,17 +446,33 @@ public:
   float el(int row, int col) const { return lM[(row * 3) + col]; }
 };
 
+lVec3f operator*(const lMatrix3f &m, const lVec3f &v) {
+  return lVec3f(m.el(0,0)*v.x + m.el(0,1)*v.y + m.el(0,2)*v.z,
+                m.el(1,0)*v.x + m.el(1,1)*v.y + m.el(1,2)*v.z,
+                m.el(2,0)*v.x + m.el(2,1)*v.y + m.el(2,2)*v.z);
+}
+lVec3f operator*(const lVec3f &v, const lMatrix3f &m) {
+  return lVec3f(Dot(m.Col(0), v), Dot(m.Col(1), v), Dot(m.Col(2), v));
+}
+lMatrix3f operator*(const lMatrix3f &m0, const lMatrix3f &m1) {
+  return lMatrix3f((m0.Row(0) * m1), (m0.Row(1) * m1), (m0.Row(2) * m1));
+}
+
+bool operator==(const lMatrix3f &m0, const lMatrix3f &m1) {
+  for(int i=0;i<9;i++) {
+    if(m0.lM[i] != m1.lM[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+bool operator!=(const lMatrix3f &m0, const lMatrix3f &m1) {
+  return !(m0 == m1);
+}
+
 class lMatrix4f;
 
-lVec4f Mult(const lMatrix4f &m, const lVec4f &v);
-lVec4f Mult(const lVec4f &v, const lMatrix4f &m);
-lMatrix4f Mult(const lMatrix4f &m0, const lMatrix4f &m1);
-bool Equals(const lMatrix4f &m0, const lMatrix4f &m1);
-
-lVec4f operator*(const lMatrix4f &m, const lVec4f &v);
-lVec4f operator*(const lVec4f &v, const lMatrix4f &m);
 lMatrix4f operator*(const lMatrix4f &m0, const lMatrix4f &m1);
-bool operator==(const lMatrix4f &m0, const lMatrix4f &m1);
 
 class lMatrix4f {
 public:
@@ -534,6 +523,15 @@ public:
     el(2, i) = c.z;
     el(3, i) = c.w;
   }
+
+  float Determinant() {
+  lMatrix3f a(lM[5], lM[6], lM[7], lM[9], lM[10], lM[11], lM[13], lM[14], lM[15]);
+  lMatrix3f b(lM[4], lM[6], lM[7], lM[8], lM[10], lM[11], lM[12], lM[14], lM[15]);
+  lMatrix3f c(lM[4], lM[5], lM[7], lM[8], lM[9], lM[11], lM[12], lM[13], lM[15]);
+  lMatrix3f d(lM[4], lM[5], lM[6], lM[8], lM[9], lM[10], lM[12], lM[13], lM[14]);
+  return (lM[0] * a.Determinant()) - (lM[1] * b.Determinant()) +
+         (lM[2] * c.Determinant()) - (lM[3] * d.Determinant());
+}
 
   lMatrix4f Inverted(bool print = false) {
     lMatrix4f mat = *this;
@@ -687,38 +685,45 @@ public:
   float el(int row, int col) const { return lM[(row * 4) + col]; }
 };
 
+lVec4f operator*(const lMatrix4f &m, const lVec4f &v) {
+  return lVec4f(Dot(m.Row(0), v), Dot(m.Row(1), v),
+                Dot(m.Row(2), v), Dot(m.Row(3), v));
+}
+lVec4f operator*(const lVec4f &v, const lMatrix4f &m) {
+  return lVec4f(Dot(m.Col(0), v), Dot(m.Col(1), v),
+                Dot(m.Col(2), v), Dot(m.Col(3), v));
+}
+lMatrix4f operator*(const lMatrix4f &m0, const lMatrix4f &m1) {
+  return lMatrix4f((m0.Row(0) * m1), (m0.Row(1) * m1),
+                   (m0.Row(2) * m1), (m0.Row(3) * m1));
+}
+
+bool operator==(const lMatrix4f &m0, const lMatrix4f &m1) {
+  for(int i=0;i<16;i++) {
+    if(m0.lM[i] != m1.lM[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+bool operator!=(const lMatrix4f &m0, const lMatrix4f &m1) {
+  return !(m0 == m1);
+}
+
 lMatrix4f ToMatrix4(lMatrix3f &mat3) {
   lMatrix4f mat4;
-  mat4.el(0, 0) = mat3.el(0, 0);
-  mat4.el(0, 1) = mat3.el(0, 1);
-  mat4.el(0, 2) = mat3.el(0, 2);
-  mat4.el(1, 0) = mat3.el(1, 0);
-  mat4.el(1, 1) = mat3.el(1, 1);
-  mat4.el(1, 2) = mat3.el(1, 2);
-  mat4.el(2, 0) = mat3.el(2, 0);
-  mat4.el(2, 1) = mat3.el(2, 1);
-  mat4.el(2, 2) = mat3.el(2, 2);
-  mat4.el(0, 3) = 0.0f;
-  mat4.el(1, 3) = 0.0f;
-  mat4.el(2, 3) = 0.0f;
-  mat4.el(3, 0) = 0.0f;
-  mat4.el(3, 1) = 0.0f;
-  mat4.el(3, 2) = 0.0f;
-  mat4.el(3, 3) = 1.0f;
+  mat4.Row(0, lVec4f(mat3.el(0, 0), mat3.el(0, 1), mat3.el(0, 2), 0.0f));
+  mat4.Row(1, lVec4f(mat3.el(1, 0), mat3.el(1, 1), mat3.el(1, 2), 0.0f));
+  mat4.Row(2, lVec4f(mat3.el(2, 0), mat3.el(2, 1), mat3.el(2, 2), 0.0f));
+  mat4.Row(3, lVec4f(0.0f, 0.0f, 0.0f, 1.0f));
   return mat4;
 }
 
 lMatrix3f ToMatrix3(lMatrix4f &mat4) {
   lMatrix3f mat3;
-  mat3.el(0, 0) = mat4.el(0, 0);
-  mat3.el(0, 1) = mat4.el(0, 1);
-  mat3.el(0, 2) = mat4.el(0, 2);
-  mat3.el(1, 0) = mat4.el(1, 0);
-  mat3.el(1, 1) = mat4.el(1, 1);
-  mat3.el(1, 2) = mat4.el(1, 2);
-  mat3.el(2, 0) = mat4.el(2, 0);
-  mat3.el(2, 1) = mat4.el(2, 1);
-  mat3.el(2, 2) = mat4.el(2, 2);
+  mat3.Row(0, lVec3f(mat4.el(0, 0), mat4.el(0, 1), mat4.el(0, 2)));
+  mat3.Row(1, lVec3f(mat4.el(1, 0), mat4.el(1, 1), mat4.el(1, 2)));
+  mat3.Row(2, lVec3f(mat4.el(2, 0), mat4.el(2, 1), mat4.el(2, 2)));
   return mat3;
 }
 
@@ -921,21 +926,15 @@ public:
     yz = q[1] * zs;
     zz = q[2] * zs;
 
-    m.el(0, 0) = 1.0f - (yy + zz);
-    m.el(1, 0) = xy + wz;
-    m.el(2, 0) = xz - wy;
-    m.el(0, 1) = xy - wz;
-    m.el(1, 1) = 1.0f - (xx + zz);
-    m.el(2, 1) = yz + wx;
-    m.el(0, 2) = xz + wy;
-    m.el(1, 2) = yz - wx;
-    m.el(2, 2) = 1.0f - (xx + yy);
-  }
-
-  void GetValue(lMatrix4f &m) {
-    lMatrix3f mat3;
-    GetValue(mat3);
-    m = ToMatrix4(mat3);
+    m.el(0,0) = 1.0f - (yy + zz);
+    m.el(1,0) = xy + wz;
+    m.el(2,0) = xz - wy;
+    m.el(0,1) = xy - wz;
+    m.el(1,1) = 1.0f - (xx + zz);
+    m.el(2,1) = yz + wx;
+    m.el(0,2) = xz + wy;
+    m.el(1,2) = yz - wx;
+    m.el(2,2) = 1.0f - (xx + yy);
   }
 
   lMatrix3f GetMatrix3() {
@@ -945,81 +944,13 @@ public:
   }
 
   lMatrix4f GetMatrix4() {
-    lMatrix4f mat4;
+    lMatrix3f mat4;
     GetValue(mat4);
-    return mat4;
+    return ToMatrix4(mat4);
   }
 };
 
-lVec3f Mult(const lMatrix3f &m, const lVec3f &v) {
-  return lVec3f(Dot(m.Row(0), v), Dot(m.Row(1), v), Dot(m.Row(2), v));
-}
-lVec3f Mult(const lVec3f &v, const lMatrix3f &m) {
-  return lVec3f(Dot(m.Col(0), v), Dot(m.Col(1), v), Dot(m.Col(2), v));
-}
-lMatrix3f Mult(const lMatrix3f &m0, const lMatrix3f &m1) {
-  return lMatrix3f((m0.Row(0) * m1), (m0.Row(1) * m1), (m0.Row(2) * m1));
-}
-
-lVec3f operator*(const lMatrix3f &m, const lVec3f &v) { return Mult(m, v); }
-lVec3f operator*(const lVec3f &v, const lMatrix3f &m) { return Mult(v, m); }
-lMatrix3f operator*(const lMatrix3f &m0, const lMatrix3f &m1) {
-  return Mult(m0, m1);
-}
-
-lVec4f Mult(const lMatrix4f &m, const lVec4f &v) {
-  return lVec4f(Dot(m.Row(0), v), Dot(m.Row(1), v), Dot(m.Row(2), v),
-                Dot(m.Row(3), v));
-}
-lVec4f Mult(const lVec4f &v, const lMatrix4f &m) {
-  return lVec4f(Dot(m.Col(0), v), Dot(m.Col(1), v), Dot(m.Col(2), v),
-                Dot(m.Col(3), v));
-}
-lMatrix4f Mult(const lMatrix4f &m0, const lMatrix4f &m1) {
-  return lMatrix4f((m0.Row(0) * m1), (m0.Row(1) * m1), (m0.Row(2) * m1),
-                   (m0.Row(3) * m1));
-}
-
-lVec4f operator*(const lMatrix4f &m, const lVec4f &v) { return Mult(m, v); }
-lVec4f operator*(const lVec4f &v, const lMatrix4f &m) { return Mult(v, m); }
-lMatrix4f operator*(const lMatrix4f &m0, const lMatrix4f &m1) {
-  return Mult(m0, m1);
-}
-
-
-bool Equals(const lMatrix3f &m0, const lMatrix3f &m1) {
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
-      if (m0.el(i, j) != m1.el(i, j)) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-bool operator==(const lMatrix3f &m0, const lMatrix3f &m1) {
-  return Equals(m0, m1);
-}
-
-
-bool Equals(const lMatrix4f &m0, const lMatrix4f &m1) {
-  for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < 4; j++) {
-      if (m0.el(i, j) != m1.el(i, j)) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-bool operator==(const lMatrix4f &m0, const lMatrix4f &m1) {
-  return Equals(m0, m1);
-}
-
-
-lQuaternionf Mult(lQuaternionf q0, lQuaternionf q1) {
+lQuaternionf operator*(lQuaternionf q0, lQuaternionf q1) {
   lQuaternionf out;
   out.w = (q0.w*q1.w)-(q0.x*q1.x)-(q0.y*q1.y)-(q0.z*q1.z);
   out.x = (q0.w*q1.x)+(q0.x*q1.w)+(q0.y*q1.z)-(q0.z*q1.y);
@@ -1027,43 +958,11 @@ lQuaternionf Mult(lQuaternionf q0, lQuaternionf q1) {
   out.z = (q0.w*q1.z)+(q0.z*q1.w)+(q0.x*q1.y)-(q0.y*q1.x);
   return out;
 }
-lVec3f Mult(lQuaternionf q, lVec3f v) {
+lVec3f operator*(lQuaternionf q, lVec3f v) {
   float vCo = (q.w*q.w) - (q.x*q.x) - (q.y*q.y) - (q.z*q.z);
   float uCo = 2.0f*((v.x*q.x) + (v.y*q.y) + (v.z*q.z));
   float cCo = 2.0f*q.w;
   return lVec3f(((vCo*v.x)+(uCo*q.x)+cCo*((q.y*v.z)-(q.z*v.y))),
     ((vCo*v.y)+(uCo*q.y)+cCo*((q.z*v.x)-(q.x*v.z))),
     ((vCo*v.z)+(uCo*q.z)+cCo*((q.x*v.y)-(q.y*v.x))));
-}
-
-lQuaternionf operator*(lQuaternionf q0, lQuaternionf q1) { return Mult(q0, q1); }
-lVec3f operator*(lQuaternionf q, lVec3f v) { return Mult(q, v); }
-
-void printOp(float *m0, float *m1) {
-  printf("%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, %.3f, %.3f\n%.3f, %.3f, %.3f, "
-         "%.3f\t%.3f, %.3f, %.3f, %.3f\n%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, "
-         "%.3f, %.3f\n%.3f, %.3f, %.3f, %.3f\t%.3f, %.3f, %.3f, %.3f\n\n",
-         m0[0], m0[1], m0[2], m0[3], m1[0], m1[1], m1[2], m1[3], m0[4], m0[5],
-         m0[6], m0[7], m1[4], m1[5], m1[6], m1[7], m0[8], m0[9], m0[10], m0[11],
-         m1[8], m1[9], m1[10], m1[11], m0[12], m0[13], m0[14], m0[15], m1[12],
-         m1[13], m1[14], m1[15]);
-}
-
-float Mat2Det(float a, float b, float c, float d) { return (a * d) - (b * c); }
-float Mat3Det(lMatrix3f m) {
-  return (m.lM[0] * Mat2Det(m.lM[4], m.lM[5], m.lM[8], m.lM[7])) -
-         (m.lM[1] * Mat2Det(m.lM[3], m.lM[5], m.lM[6], m.lM[7])) +
-         (m.lM[2] * Mat2Det(m.lM[3], m.lM[4], m.lM[6], m.lM[8]));
-}
-float Mat4Det(lMatrix4f m) {
-  lMatrix3f a(m.lM[5], m.lM[6], m.lM[7], m.lM[9], m.lM[10], m.lM[11], m.lM[13],
-              m.lM[14], m.lM[15]);
-  lMatrix3f b(m.lM[4], m.lM[6], m.lM[7], m.lM[8], m.lM[10], m.lM[11], m.lM[12],
-              m.lM[14], m.lM[15]);
-  lMatrix3f c(m.lM[4], m.lM[5], m.lM[7], m.lM[8], m.lM[9], m.lM[11], m.lM[12],
-              m.lM[13], m.lM[15]);
-  lMatrix3f d(m.lM[4], m.lM[5], m.lM[6], m.lM[8], m.lM[9], m.lM[10], m.lM[12],
-              m.lM[13], m.lM[14]);
-  return (m.lM[0] * Mat3Det(a)) - (m.lM[1] * Mat3Det(b)) +
-         (m.lM[2] * Mat3Det(c)) - (m.lM[3] * Mat3Det(d));
 }
