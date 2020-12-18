@@ -51,49 +51,51 @@ public:
   const float &operator[](int i) const { return v[i]; }
 
   lVec3f &operator*=(float d) {
-    for(int i=0;i<3;i++) {
+    for (int i = 0; i < 3; i++) {
       v[i] *= d;
     }
     return *this;
   }
   lVec3f &operator*=(const lVec3f &u) {
-    for(int i=0;i<3;i++) {
+    for (int i = 0; i < 3; i++) {
       v[i] *= u[i];
     }
     return *this;
   }
-  lVec3f &operator/=(float d) { return *this *= (1.0f/d); }
+  lVec3f &operator/=(float d) { return *this *= (1.0f / d); }
 
   lVec3f &operator+=(float d) {
-    for(int i=0;i<3;i++) { v[i] += d; }
+    for (int i = 0; i < 3; i++) {
+      v[i] += d;
+    }
     return *this;
   }
   lVec3f &operator+=(const lVec3f &u) {
-    for (int i=0;i<3;i++) { v[i] += u.v[i]; }
+    for (int i = 0; i < 3; i++) {
+      v[i] += u.v[i];
+    }
     return *this;
   }
   lVec3f &operator-=(float d) {
-    for(int i=0;i<3;i++) { v[i] -= d; }
+    for (int i = 0; i < 3; i++) {
+      v[i] -= d;
+    }
     return *this;
   }
   lVec3f &operator-=(const lVec3f &u) {
-    for (int i=0;i<3;i++) { v[i] -= u.v[i]; }
+    for (int i = 0; i < 3; i++) {
+      v[i] -= u.v[i];
+    }
     return *this;
   }
 };
 
-lVec3f operator*(const lVec3f &v, const float &f) {
-  return lVec3f(v) *= f;
-}
-lVec3f operator*(const float &f, const lVec3f &v) {
-  return lVec3f(v) *= f;
-}
+lVec3f operator*(const lVec3f &v, const float &f) { return lVec3f(v) *= f; }
+lVec3f operator*(const float &f, const lVec3f &v) { return lVec3f(v) *= f; }
 lVec3f operator*(const lVec3f &v0, const lVec3f &v1) {
   return lVec3f(v0) *= v1;
 }
-lVec3f operator/(const lVec3f &v, const float &f) {
-  return lVec3f(v) /= f;
-}
+lVec3f operator/(const lVec3f &v, const float &f) { return lVec3f(v) /= f; }
 
 lVec3f operator+(const lVec3f &v0, const lVec3f &v1) {
   return lVec3f(v0) += v1;
@@ -103,14 +105,14 @@ lVec3f operator-(const lVec3f &v0, const lVec3f &v1) {
 }
 
 bool operator==(const lVec3f &v0, const lVec3f &v1) {
-  for(int i=0;i<3;i++) {
-    if(v0.v[i] != v1.v[i]) { return false; }
+  for (int i = 0; i < 3; i++) {
+    if (v0.v[i] != v1.v[i]) {
+      return false;
+    }
   }
   return true;
 }
-bool operator!=(const lVec3f &v0, const lVec3f &v1) {
-  return !(v0 == v1);
-}
+bool operator!=(const lVec3f &v0, const lVec3f &v1) { return !(v0 == v1); }
 
 lVec3f Min(const lVec3f &v0, const lVec3f &v1) {
   lVec3f out;
@@ -128,10 +130,11 @@ lVec3f Max(const lVec3f &v0, const lVec3f &v1) {
 }
 
 float Dot(lVec3f v0, lVec3f v1) {
-  return (v0.x*v1.x) + (v0.y*v1.y) + (v0.z*v1.z);
+  return (v0.x * v1.x) + (v0.y * v1.y) + (v0.z * v1.z);
 }
 lVec3f Cross(lVec3f v0, lVec3f v1) {
-  return lVec3f((v0.y*v1.z - v0.z*v1.y), (v0.z*v1.x - v0.x*v1.z), (v0.x*v1.y - v0.y*v1.x));
+  return lVec3f((v0.y * v1.z - v0.z * v1.y), (v0.z * v1.x - v0.x * v1.z),
+                (v0.x * v1.y - v0.y * v1.x));
 }
 
 class lVec4f {
@@ -172,9 +175,11 @@ public:
   }
 
   void Negate() {
-    for(int i=0;i<4;i++) { v[i] = -v[i]; }
+    for (int i = 0; i < 4; i++) {
+      v[i] = -v[i];
+    }
   }
-  
+
   lVec4f Negated() {
     lVec4f out = lVec4f(&v[0]);
     out.Negate();
@@ -182,8 +187,10 @@ public:
   }
 
   void Normalize() {
-    float l = sqrt((x*x) + (y*y) + (z*z));
-    for(int i=0;i<4;i++) { v[i] /= l; }
+    float l = sqrt((x * x) + (y * y) + (z * z));
+    for (int i = 0; i < 4; i++) {
+      v[i] /= l;
+    }
   }
 
   lVec4f Normalized() {
@@ -196,40 +203,40 @@ public:
   const float &operator[](int i) const { return v[i]; }
 
   lVec4f &operator*=(float f) {
-    for(int i=0;i<4;i++) { v[i] *= f; }
+    for (int i = 0; i < 4; i++) {
+      v[i] *= f;
+    }
     return *this;
   }
   lVec4f &operator*=(const lVec4f &u) {
-    for(int i=0;i<4;i++) { v[i] *= u[i]; }
+    for (int i = 0; i < 4; i++) {
+      v[i] *= u[i];
+    }
     return *this;
   }
-  lVec4f &operator/=(float f) { return *this *= (1.0f/f); }
+  lVec4f &operator/=(float f) { return *this *= (1.0f / f); }
 
   lVec4f &operator+=(const lVec4f &u) {
-    for(int i=0;i<4;i++) { v[i] += u.v[i]; }
+    for (int i = 0; i < 4; i++) {
+      v[i] += u.v[i];
+    }
     return *this;
   }
   lVec4f &operator-=(const lVec4f &u) {
-    for(int i=0;i<4;i++) { v[i] -= u.v[i]; }
+    for (int i = 0; i < 4; i++) {
+      v[i] -= u.v[i];
+    }
     return *this;
   }
-  lVec4f operator-() const {
-    return lVec4f(*this).Negated();
-  }
+  lVec4f operator-() const { return lVec4f(*this).Negated(); }
 };
 
-lVec4f operator*(const lVec4f &v, const float &f) {
-  return lVec4f(v) *= f;
-}
-lVec4f operator*(const float &f, const lVec4f &v) {
-  return lVec4f(v) *= f;
-}
+lVec4f operator*(const lVec4f &v, const float &f) { return lVec4f(v) *= f; }
+lVec4f operator*(const float &f, const lVec4f &v) { return lVec4f(v) *= f; }
 lVec4f operator*(const lVec4f &v0, const lVec4f &v1) {
   return lVec4f(v0) *= v1;
 }
-lVec4f operator/(const lVec4f &v, const float &f) {
-  return lVec4f(v) /= f;
-}
+lVec4f operator/(const lVec4f &v, const float &f) { return lVec4f(v) /= f; }
 
 lVec4f operator+(const lVec4f &v0, const lVec4f &v1) {
   return lVec4f(v0) += v1;
@@ -239,14 +246,14 @@ lVec4f operator-(const lVec4f &v0, const lVec4f &v1) {
 }
 
 bool operator==(const lVec4f &v0, const lVec4f &v1) {
-  for (int i=0;i<4;i++) {
-    if(v0.v[i] != v1.v[i]) { return false; }
+  for (int i = 0; i < 4; i++) {
+    if (v0.v[i] != v1.v[i]) {
+      return false;
+    }
   }
   return true;
 }
-bool operator!=(const lVec4f &v0, const lVec4f &v1) {
-  return !(v0 == v1);
-}
+bool operator!=(const lVec4f &v0, const lVec4f &v1) { return !(v0 == v1); }
 
 lVec4f Min(const lVec4f &v0, const lVec4f &v1) {
   lVec4f out;
@@ -266,7 +273,7 @@ lVec4f Max(const lVec4f &v0, const lVec4f &v1) {
 }
 
 float Dot(lVec4f v0, lVec4f v1) {
-  return (v0.x*v1.x) + (v0.y*v1.y) + (v0.z*v1.z) + (v0.w*v1.w);
+  return (v0.x * v1.x) + (v0.y * v1.y) + (v0.z * v1.z) + (v0.w * v1.w);
 }
 
 enum ElAxis { AXIS_X, AXIS_Y, AXIS_Z };
@@ -290,7 +297,8 @@ public:
 
   lMatrix3f() { MakeIdentity(); }
 
-  lMatrix3f(float f00, float f01, float f02, float f10, float f11, float f12, float f20, float f21, float f22) {
+  lMatrix3f(float f00, float f01, float f02, float f10, float f11, float f12,
+            float f20, float f21, float f22) {
     Set(f00, f01, f02, f10, f11, f12, f20, f21, f22);
   }
 
@@ -358,7 +366,7 @@ public:
 
   void Invert() {
     lMatrix3f out;
-    for(int r = 0; r < 3; r++) { // Pivots
+    for (int r = 0; r < 3; r++) { // Pivots
       float rowEl = fabs(Row(r).v[r]);
       for (int j = r + 1; j < 3; j++) {
         if (fabs(Row(j).v[r]) > rowEl) {
@@ -368,7 +376,9 @@ public:
       }
       float pivotEl = Row(r).v[r];
       for (int i = 0; i < 3; i++) {
-        if (i == r) { continue; }
+        if (i == r) {
+          continue;
+        }
         float rowEl = Col(r).v[i];
         out.Row(i, ((out.Row(i) * pivotEl) - (out.Row(r) * rowEl)));
         Row(i, ((Row(i) * pivotEl) - (Row(r) * rowEl)));
@@ -382,7 +392,8 @@ public:
     *this = out;
   }
 
-  void Set(float f00, float f01, float f02, float f10, float f11, float f12, float f20, float f21, float f22) {
+  void Set(float f00, float f01, float f02, float f10, float f11, float f12,
+           float f20, float f21, float f22) {
     Row(0, lVec3f(f00, f01, f02));
     Row(1, lVec3f(f10, f11, f12));
     Row(2, lVec3f(f20, f21, f22));
@@ -447,9 +458,9 @@ public:
 };
 
 lVec3f operator*(const lMatrix3f &m, const lVec3f &v) {
-  return lVec3f(m.el(0,0)*v.x + m.el(0,1)*v.y + m.el(0,2)*v.z,
-                m.el(1,0)*v.x + m.el(1,1)*v.y + m.el(1,2)*v.z,
-                m.el(2,0)*v.x + m.el(2,1)*v.y + m.el(2,2)*v.z);
+  return lVec3f(m.el(0, 0) * v.x + m.el(0, 1) * v.y + m.el(0, 2) * v.z,
+                m.el(1, 0) * v.x + m.el(1, 1) * v.y + m.el(1, 2) * v.z,
+                m.el(2, 0) * v.x + m.el(2, 1) * v.y + m.el(2, 2) * v.z);
 }
 lVec3f operator*(const lVec3f &v, const lMatrix3f &m) {
   return lVec3f(Dot(m.Col(0), v), Dot(m.Col(1), v), Dot(m.Col(2), v));
@@ -459,8 +470,8 @@ lMatrix3f operator*(const lMatrix3f &m0, const lMatrix3f &m1) {
 }
 
 bool operator==(const lMatrix3f &m0, const lMatrix3f &m1) {
-  for(int i=0;i<9;i++) {
-    if(m0.lM[i] != m1.lM[i]) {
+  for (int i = 0; i < 9; i++) {
+    if (m0.lM[i] != m1.lM[i]) {
       return false;
     }
   }
@@ -480,8 +491,11 @@ public:
 
   lMatrix4f() { MakeIdentity(); }
 
-  lMatrix4f(float f00, float f01, float f02, float f03, float f10, float f11, float f12, float f13, float f20, float f21, float f22, float f23, float f30, float f31, float f32, float f33) {
-    Set(f00, f01, f02, f03, f10, f11, f12, f13, f20, f21, f22, f23, f30, f31, f32, f33);
+  lMatrix4f(float f00, float f01, float f02, float f03, float f10, float f11,
+            float f12, float f13, float f20, float f21, float f22, float f23,
+            float f30, float f31, float f32, float f33) {
+    Set(f00, f01, f02, f03, f10, f11, f12, f13, f20, f21, f22, f23, f30, f31,
+        f32, f33);
   }
 
   lMatrix4f(const lVec4f &r0, const lVec4f &r1, const lVec4f &r2,
@@ -493,7 +507,8 @@ public:
   }
 
   void MakeIdentity() {
-    Set(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+    Set(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f);
   }
 
   lVec4f Row(int i) const {
@@ -525,13 +540,17 @@ public:
   }
 
   float Determinant() {
-  lMatrix3f a(lM[5], lM[6], lM[7], lM[9], lM[10], lM[11], lM[13], lM[14], lM[15]);
-  lMatrix3f b(lM[4], lM[6], lM[7], lM[8], lM[10], lM[11], lM[12], lM[14], lM[15]);
-  lMatrix3f c(lM[4], lM[5], lM[7], lM[8], lM[9], lM[11], lM[12], lM[13], lM[15]);
-  lMatrix3f d(lM[4], lM[5], lM[6], lM[8], lM[9], lM[10], lM[12], lM[13], lM[14]);
-  return (lM[0] * a.Determinant()) - (lM[1] * b.Determinant()) +
-         (lM[2] * c.Determinant()) - (lM[3] * d.Determinant());
-}
+    lMatrix3f a(lM[5], lM[6], lM[7], lM[9], lM[10], lM[11], lM[13], lM[14],
+                lM[15]);
+    lMatrix3f b(lM[4], lM[6], lM[7], lM[8], lM[10], lM[11], lM[12], lM[14],
+                lM[15]);
+    lMatrix3f c(lM[4], lM[5], lM[7], lM[8], lM[9], lM[11], lM[12], lM[13],
+                lM[15]);
+    lMatrix3f d(lM[4], lM[5], lM[6], lM[8], lM[9], lM[10], lM[12], lM[13],
+                lM[14]);
+    return (lM[0] * a.Determinant()) - (lM[1] * b.Determinant()) +
+           (lM[2] * c.Determinant()) - (lM[3] * d.Determinant());
+  }
 
   lMatrix4f Inverted(bool print = false) {
     lMatrix4f mat = *this;
@@ -608,8 +627,8 @@ public:
   }
 
   void Set(float f00, float f01, float f02, float f03, float f10, float f11,
-            float f12, float f13, float f20, float f21, float f22, float f23,
-            float f30, float f31, float f32, float f33) {
+           float f12, float f13, float f20, float f21, float f22, float f23,
+           float f30, float f31, float f32, float f33) {
     Row(0, lVec4f(f00, f01, f02, f03));
     Row(1, lVec4f(f10, f11, f12, f13));
     Row(2, lVec4f(f20, f21, f22, f23));
@@ -686,21 +705,21 @@ public:
 };
 
 lVec4f operator*(const lMatrix4f &m, const lVec4f &v) {
-  return lVec4f(Dot(m.Row(0), v), Dot(m.Row(1), v),
-                Dot(m.Row(2), v), Dot(m.Row(3), v));
+  return lVec4f(Dot(m.Row(0), v), Dot(m.Row(1), v), Dot(m.Row(2), v),
+                Dot(m.Row(3), v));
 }
 lVec4f operator*(const lVec4f &v, const lMatrix4f &m) {
-  return lVec4f(Dot(m.Col(0), v), Dot(m.Col(1), v),
-                Dot(m.Col(2), v), Dot(m.Col(3), v));
+  return lVec4f(Dot(m.Col(0), v), Dot(m.Col(1), v), Dot(m.Col(2), v),
+                Dot(m.Col(3), v));
 }
 lMatrix4f operator*(const lMatrix4f &m0, const lMatrix4f &m1) {
-  return lMatrix4f((m0.Row(0) * m1), (m0.Row(1) * m1),
-                   (m0.Row(2) * m1), (m0.Row(3) * m1));
+  return lMatrix4f((m0.Row(0) * m1), (m0.Row(1) * m1), (m0.Row(2) * m1),
+                   (m0.Row(3) * m1));
 }
 
 bool operator==(const lMatrix4f &m0, const lMatrix4f &m1) {
-  for(int i=0;i<16;i++) {
-    if(m0.lM[i] != m1.lM[i]) {
+  for (int i = 0; i < 16; i++) {
+    if (m0.lM[i] != m1.lM[i]) {
       return false;
     }
   }
@@ -779,53 +798,53 @@ public:
       if (m.el(0, 0) > m.el(1, 1)) { // X-form
         t = 1 + m.el(0, 0) - m.el(1, 1) - m.el(2, 2);
         k = 0.5 / sqrt(t);
-        SetValue(t * k, (m.el(0, 1) + m.el(1, 0)) * k, (m.el(2, 0) + m.el(0, 2)) * k, (m.el(1, 2) - m.el(2, 1)) * k);
-      } else { // Y-form
-        t = 1 - m.el(0, 0) + m.el(1, 1) - m.el(2, 2);
-        k = 0.5 / sqrt(t);
-        SetValue((m.el(0, 1) + m.el(1, 0)) * k, t * k, (m.el(1, 2) + m.el(2, 1)) * k, (m.el(2, 0) - m.el(0, 2)) * k);
+        SetValue(t * k, (m.el(0, 1) + m.el(1, 0)) * k, (m.el(2, 0) + m.el(0, 2))
+    * k, (m.el(1, 2) - m.el(2, 1)) * k); } else { // Y-form t = 1 - m.el(0, 0) +
+    m.el(1, 1) - m.el(2, 2); k = 0.5 / sqrt(t); SetValue((m.el(0, 1) + m.el(1,
+    0)) * k, t * k, (m.el(1, 2) + m.el(2, 1)) * k, (m.el(2, 0) - m.el(0, 2)) *
+    k);
       }
     } else {
       if (m.el(0, 0) < -m.el(1, 1)) { // Z-form
         t = 1 - m.el(0, 0) - m.el(1, 1) + m.el(2, 2);
         k = 0.5 / sqrt(t);
-        SetValue((m.el(2, 0) + m.el(0, 2)) * k, (m.el(1, 2) + m.el(2, 1)) * k, t * k, (m.el(0, 1) - m.el(1, 0)) * k);
-      } else { // W-form
-        t = 1 + m.el(0, 0) + m.el(1, 1) + m.el(2, 2);
-        k = 0.5 / sqrt(t);
-        SetValue((m.el(1, 2) - m.el(2, 1)) * k, (m.el(2, 0) - m.el(0, 2)) * k, (m.el(0, 1) - m.el(1, 0)) * k, t * k);
+        SetValue((m.el(2, 0) + m.el(0, 2)) * k, (m.el(1, 2) + m.el(2, 1)) * k, t
+    * k, (m.el(0, 1) - m.el(1, 0)) * k); } else { // W-form t = 1 + m.el(0, 0) +
+    m.el(1, 1) + m.el(2, 2); k = 0.5 / sqrt(t); SetValue((m.el(1, 2) - m.el(2,
+    1)) * k, (m.el(2, 0) - m.el(0, 2)) * k, (m.el(0, 1) - m.el(1, 0)) * k, t *
+    k);
       }
     }
     */
 
     float tr, S;
 
-    tr = m.el(0,0) + m.el(1,1) + m.el(2,2);
+    tr = m.el(0, 0) + m.el(1, 1) + m.el(2, 2);
 
-    if(tr > 0) {
-      S = sqrt(tr + 1.0)*2; // S=4*qw
-      q[0] = 0.25*S;
-      q[1] = (m.el(2,1) - m.el(1,2))/S;
-      q[2] = (m.el(0,2) - m.el(2,0))/S;
-      q[3] = (m.el(1,0) - m.el(0,1))/S;
-    } else if((m.el(0,0) > m.el(1,1)) && (m.el(0,0) > m.el(2,2))) {
-      S = sqrt(1.0 + m.el(0,0) - m.el(1,1) - m.el(2,2))*2; // S=4*qx
-      q[0] = (m.el(2, 1) - m.el(1,2))/S;
-      q[1] = 0.25*S;
-      q[2] = (m.el(0,1) + m.el(1,0))/S;
-      q[3] = (m.el(0,2) + m.el(2,0))/S;
-    } else if(m.el(1,1) > m.el(2,2)) {
-      S = sqrt(1.0 + m.el(1,1) - m.el(0,0) - m.el(2,2))*2; // S=4*qy
-      q[0] = (m.el(0,2) - m.el(2,0))/S;
-      q[1] = (m.el(0,1) + m.el(1,0))/S;
-      q[2] = 0.25*S;
-      q[3] = (m.el(1,2) + m.el(2,1))/S;
+    if (tr > 0) {
+      S = sqrt(tr + 1.0) * 2; // S=4*qw
+      q[0] = 0.25 * S;
+      q[1] = (m.el(2, 1) - m.el(1, 2)) / S;
+      q[2] = (m.el(0, 2) - m.el(2, 0)) / S;
+      q[3] = (m.el(1, 0) - m.el(0, 1)) / S;
+    } else if ((m.el(0, 0) > m.el(1, 1)) && (m.el(0, 0) > m.el(2, 2))) {
+      S = sqrt(1.0 + m.el(0, 0) - m.el(1, 1) - m.el(2, 2)) * 2; // S=4*qx
+      q[0] = (m.el(2, 1) - m.el(1, 2)) / S;
+      q[1] = 0.25 * S;
+      q[2] = (m.el(0, 1) + m.el(1, 0)) / S;
+      q[3] = (m.el(0, 2) + m.el(2, 0)) / S;
+    } else if (m.el(1, 1) > m.el(2, 2)) {
+      S = sqrt(1.0 + m.el(1, 1) - m.el(0, 0) - m.el(2, 2)) * 2; // S=4*qy
+      q[0] = (m.el(0, 2) - m.el(2, 0)) / S;
+      q[1] = (m.el(0, 1) + m.el(1, 0)) / S;
+      q[2] = 0.25 * S;
+      q[3] = (m.el(1, 2) + m.el(2, 1)) / S;
     } else {
-      S = sqrt(1.0 + m.el(2,2) - m.el(0,0) - m.el(1,1))*2; // S=4*qz
-      q[0] = (m.el(1,0) - m.el(0,1))/S;
-      q[1] = (m.el(0,2) + m.el(2,0))/S;
-      q[2] = (m.el(1,2) + m.el(2,1))/S;
-      q[3] = 0.25*S;
+      S = sqrt(1.0 + m.el(2, 2) - m.el(0, 0) - m.el(1, 1)) * 2; // S=4*qz
+      q[0] = (m.el(1, 0) - m.el(0, 1)) / S;
+      q[1] = (m.el(0, 2) + m.el(2, 0)) / S;
+      q[2] = (m.el(1, 2) + m.el(2, 1)) / S;
+      q[3] = 0.25 * S;
     }
     printf("%.3f, %.3f, %.3f : %.3f\n", x, y, z, w);
   }
@@ -926,15 +945,15 @@ public:
     yz = q[1] * zs;
     zz = q[2] * zs;
 
-    m.el(0,0) = 1.0f - (yy + zz);
-    m.el(1,0) = xy + wz;
-    m.el(2,0) = xz - wy;
-    m.el(0,1) = xy - wz;
-    m.el(1,1) = 1.0f - (xx + zz);
-    m.el(2,1) = yz + wx;
-    m.el(0,2) = xz + wy;
-    m.el(1,2) = yz - wx;
-    m.el(2,2) = 1.0f - (xx + yy);
+    m.el(0, 0) = 1.0f - (yy + zz);
+    m.el(1, 0) = xy + wz;
+    m.el(2, 0) = xz - wy;
+    m.el(0, 1) = xy - wz;
+    m.el(1, 1) = 1.0f - (xx + zz);
+    m.el(2, 1) = yz + wx;
+    m.el(0, 2) = xz + wy;
+    m.el(1, 2) = yz - wx;
+    m.el(2, 2) = 1.0f - (xx + yy);
   }
 
   lMatrix3f GetMatrix3() {
@@ -952,17 +971,18 @@ public:
 
 lQuaternionf operator*(lQuaternionf q0, lQuaternionf q1) {
   lQuaternionf out;
-  out.w = (q0.w*q1.w)-(q0.x*q1.x)-(q0.y*q1.y)-(q0.z*q1.z);
-  out.x = (q0.w*q1.x)+(q0.x*q1.w)+(q0.y*q1.z)-(q0.z*q1.y);
-  out.y = (q0.w*q1.y)+(q0.y*q1.w)+(q0.z*q1.x)-(q0.x*q1.z);
-  out.z = (q0.w*q1.z)+(q0.z*q1.w)+(q0.x*q1.y)-(q0.y*q1.x);
+  out.w = (q0.w * q1.w) - (q0.x * q1.x) - (q0.y * q1.y) - (q0.z * q1.z);
+  out.x = (q0.w * q1.x) + (q0.x * q1.w) + (q0.y * q1.z) - (q0.z * q1.y);
+  out.y = (q0.w * q1.y) + (q0.y * q1.w) + (q0.z * q1.x) - (q0.x * q1.z);
+  out.z = (q0.w * q1.z) + (q0.z * q1.w) + (q0.x * q1.y) - (q0.y * q1.x);
   return out;
 }
 lVec3f operator*(lQuaternionf q, lVec3f v) {
-  float vCo = (q.w*q.w) - (q.x*q.x) - (q.y*q.y) - (q.z*q.z);
-  float uCo = 2.0f*((v.x*q.x) + (v.y*q.y) + (v.z*q.z));
-  float cCo = 2.0f*q.w;
-  return lVec3f(((vCo*v.x)+(uCo*q.x)+cCo*((q.y*v.z)-(q.z*v.y))),
-    ((vCo*v.y)+(uCo*q.y)+cCo*((q.z*v.x)-(q.x*v.z))),
-    ((vCo*v.z)+(uCo*q.z)+cCo*((q.x*v.y)-(q.y*v.x))));
+  float vCo = (q.w * q.w) - (q.x * q.x) - (q.y * q.y) - (q.z * q.z);
+  float uCo = 2.0f * ((v.x * q.x) + (v.y * q.y) + (v.z * q.z));
+  float cCo = 2.0f * q.w;
+  return lVec3f(
+      ((vCo * v.x) + (uCo * q.x) + cCo * ((q.y * v.z) - (q.z * v.y))),
+      ((vCo * v.y) + (uCo * q.y) + cCo * ((q.z * v.x) - (q.x * v.z))),
+      ((vCo * v.z) + (uCo * q.z) + cCo * ((q.x * v.y) - (q.y * v.x))));
 }
